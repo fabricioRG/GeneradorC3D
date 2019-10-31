@@ -1,0 +1,316 @@
+package codigo3d.backend.analizadores;
+
+import java_cup.runtime.*;
+import codigo3d.backend.manejadores.*;
+import codigo3d.backend.objetos.*;
+import java.awt.Color;
+
+parser code {:
+
+	private ManejadorParser mp = null;
+
+	// Connect this parser to a scanner!
+	public parser(Lexer1 lex, ManejadorParser mp) {
+		super(lex);
+		this.mp = mp;
+	}
+
+        public void syntax_error(Symbol s) {
+            System.out.println("¡Error de sintaxis! -> "+ s.value +" Linea "+(s.left)+" columna "+(s.right));
+            mp.printError("¡Error de sintaxis! -> "+ s.value +" Linea "+(s.left)+" columna "+(s.right) + "\n");
+        }
+
+:}
+
+/* Terminals (tokens returned by the scanner). */
+terminal String         BOOLEAN, CHAR, BYTE, INT, LONG, FLOAT, DOUBLE, STRING, NOT;
+terminal String 		AND, OR, TRUE, FALSE, ARRAY, IF, ELSIF, ELSE, WHILE;
+terminal String 		DO, FOR, PRINT, PRINTLN, COMMA, COLON, OPEN_BRK, CLOSE_BRK;
+terminal String 		OPEN_SQR, CLOSE_SQR, SEMICOLON, ASSIGN, PLUS, MINUS, MULTI;
+terminal String 		DIVISION, MODULE, LOWER_EQ, HIGHER_EQ, LOWER, HIGHER;
+terminal String 		NOT_EQUAL, EQUAL, TEXT, NUM_INTEGER, NUM_DOUBLE, NUM_FLOAT, VARIABLE; 
+
+non terminal String 	main;
+non terminal Cuarteto 	instruction, decl, instructions, block;
+non terminal String 	assign1, assign3;
+non terminal Cuarteto 	assign, assign2, formalAssign, decl1, decls;
+non terminal Cuarteto 	arrayAssign, arrayPosition;
+non terminal Cuarteto 	array, assignA;
+non terminal String 	if, if1, ifA, elseifA, elseifAA, elseA, ifB, elseifB, elseifBB, elseB;
+non terminal Cuarteto 	while, whileA;
+non terminal String 	signo;
+non terminal Cuarteto 	for, forA;
+non terminal Cuarteto 	doWhile, doWhileA;
+non terminal Cuarteto 	print, println, printA, printB, value, valueA, valueB;
+non terminal String 	rel;
+non terminal Tipo 	 	tipo;
+non terminal Simbolo 	num, bool;
+non terminal Cuarteto 	exp;
+non terminal Cuarteto 	opNum, e;
+non terminal Cuarteto 	opBol, b;
+non terminal Cuarteto 	opRel, r, expRel;
+non terminal Cuarteto 	b1;
+
+precedence left 		ELSE;
+precedence left 		ELSIF;
+precedence left 		PLUS;
+precedence left 		MINUS;
+precedence left 		MULTI, DIVISION, MODULE;
+precedence left 		EQUAL, NOT_EQUAL;
+precedence left 		HIGHER_EQ, LOWER_EQ;
+precedence left 		LOWER, HIGHER;
+precedence left 		OR; 
+precedence left 		AND;
+precedence left 		NOT;
+
+start with main;
+
+/* INICIO GRAMATICA DE -----3DIRECCIONES----- */
+
+main ::= 				instructions:e {:mp.print(e);:}
+						| block:e {:mp.print(e);:}
+						;
+
+block ::= 				OPEN_SQR instructions:e CLOSE_SQR {:RESULT = e;:}
+						| OPEN_SQR CLOSE_SQR {:RESULT = null;:}
+						;
+
+instructions ::= 		instructions:e1 instruction:e2 {:RESULT = mp.getInstructions(e1,e2);:}
+						| instruction:e {:RESULT = e;:}
+						;
+
+instruction ::=  		decl:e {:RESULT = e;:}
+						| formalAssign:e {:RESULT = e;:}
+						| arrayAssign:e {:RESULT = e;:}
+						| array:e {:RESULT = e;:}
+						| if {::}
+						| while:e {:RESULT = e;:}
+						| for:e {:RESULT = e;:}
+						| doWhile:e {:RESULT = e;:}
+						| print:e {:RESULT = e;:}
+						| println:e {:RESULT = e;:}
+						| error:e {:mp.printError("Error en:" + e );:} SEMICOLON
+						;
+
+decl ::= 				tipo:e1 decls:e2 SEMICOLON {:RESULT = mp.setAsign(e2,e1);:}
+						//| error:e {:mp.printError("Error en:" + e );:} SEMICOLON
+						;
+
+decls ::= 				decls:e1 COMMA decl1:e2 {:RESULT = mp.getDecls(e1, e2);:}
+						| decl1:e  {:RESULT = e;:}
+						;
+
+decl1 ::= 				assign2:e {:RESULT = e;:}
+						| VARIABLE:e {:RESULT = mp.getSimpleAsign(e);:}
+						;
+
+assign2 ::= 			assign3:e1 exp:e2 {:RESULT = mp.getAsign(e1, e2);:}
+						;
+
+assign3 ::= 			VARIABLE:e ASSIGN {:RESULT = e;:}
+						;
+
+array ::= 				ARRAY tipo:e1 OPEN_SQR opNum:e2 CLOSE_SQR assignA:e3 SEMICOLON {:RESULT = mp.setArray(e3, e1);:}
+						//| error:e {:mp.printError("Error en:" + e );:} SEMICOLON
+						;
+
+assignA ::= 			assignA:e1 COMMA VARIABLE:e2 {:RESULT = mp.getArrayAsign(e1, e2);:}
+						| VARIABLE:e {:RESULT = mp.getSimpleArrayAsign(e);:}
+						;
+
+arrayAssign ::= 		arrayPosition:e1 ASSIGN exp:e2 SEMICOLON {:RESULT = mp.setArrayAsign(e1,e2);:}
+						//| error:e {:mp.printError("Error en:" + e );:} SEMICOLON
+						;
+
+arrayPosition ::= 		VARIABLE:e1 OPEN_SQR opNum:e2 CLOSE_SQR {: RESULT = mp.getArrayPosition(e1,e2);:}
+						;
+
+if ::= 					IF OPEN_BRK if1 CLOSE_BRK ifA {::}
+						| IF OPEN_BRK if1 CLOSE_BRK ifB {::}
+						;
+
+if1 ::= 				opBol {::}
+						| VARIABLE {::}
+						| bool {::}
+						;
+
+ifA ::= 				instruction elseifA elseA {::}
+						| instruction elseifA {::}
+						| instruction elseA {::}
+						| instruction {::}
+						;
+
+elseifA ::= 			elseifA elseifAA {::} 
+						| elseifAA {::}
+						;
+
+elseifAA ::= 			ELSIF OPEN_BRK opBol CLOSE_BRK instruction {::}
+						| ELSIF OPEN_BRK VARIABLE CLOSE_BRK instruction {::}
+						| ELSIF OPEN_BRK bool CLOSE_BRK instruction {::}
+						;
+
+elseA ::= 				ELSE instruction {::}
+						;
+
+ifB ::= 				block elseifB elseB {::}
+						| block elseifB {::}
+						| block elseB {::}
+						| block {::}
+						;
+
+elseifB ::= 			elseifB elseifBB {::}
+						| elseifBB {::}
+						;
+
+elseifBB ::= 			ELSIF OPEN_BRK opBol CLOSE_BRK block {::}
+						| ELSIF OPEN_BRK VARIABLE CLOSE_BRK block {::}
+						| ELSIF OPEN_BRK bool CLOSE_BRK block {::}
+						;
+
+elseB ::= 				ELSE:e1 block:e2 {::}
+						;
+
+while ::= 				WHILE:e1 OPEN_BRK opBol:e2 CLOSE_BRK whileA:e3 {:RESULT = mp.whileOperacion(e1,e2,e3);:}
+						| WHILE:e1 OPEN_BRK VARIABLE:e2 CLOSE_BRK whileA:e3 {:RESULT = mp.whileVariable(e1,e2,e3);:}
+						| WHILE:e1 OPEN_BRK bool:e2 CLOSE_BRK whileA:e3 {:RESULT = mp.whileBool(e1,e2,e3);:}
+						;
+
+whileA ::= 				instruction:e {:RESULT = e;:}
+						| block:e {:RESULT = e;:}
+						;
+
+doWhile ::= 			DO:e1 doWhileA:e3 WHILE OPEN_BRK opBol:e2 CLOSE_BRK {:RESULT = mp.doWhileOperacion(e1,e2,e3);:}
+						| DO:e1 doWhileA:e3 WHILE OPEN_BRK VARIABLE:e2 CLOSE_BRK {:RESULT = mp.doWhileVariable(e1,e2,e3);:}
+						| DO:e1 doWhileA:e3 WHILE OPEN_BRK bool:e2 CLOSE_BRK {:RESULT = mp.doWhileBool(e1,e2,e3);:}
+						;
+
+doWhileA ::= 			instruction:e {:RESULT = e;:}
+						| block:e {:RESULT = e;:}
+						;
+
+for ::= 				FOR OPEN_BRK assign:e1 COLON opBol:e2 COLON signo:e3 NUM_INTEGER:e4 CLOSE_BRK forA:e5 {:RESULT = mp.forOperacion(e1,e2,e3,e4,e5);:}
+						| FOR OPEN_BRK assign:e1 COLON VARIABLE:e2 COLON signo:e3 NUM_INTEGER:e4 CLOSE_BRK forA:e5 {:RESULT = mp.forVariable(e1,e2,e3,e4,e5);:}
+						| FOR OPEN_BRK assign:e1 COLON bool:e2 COLON signo:e3 NUM_INTEGER:e4 CLOSE_BRK forA:e5 {:RESULT = mp.forBool(e1,e2,e3,e4,e5);:}
+						;
+
+forA ::= 				instruction:e {:RESULT = e;:}
+						| block:e {:RESULT = e;:}
+						;
+
+print ::= 				PRINT printA:e SEMICOLON {:RESULT = e;:}
+						//| error:e {:mp.printError("Error en:" + e );:} SEMICOLON
+						;
+
+println ::= 			PRINTLN printB:e SEMICOLON {:RESULT = e;:}
+						//| error:e {:mp.printError("Error en:" + e );:} SEMICOLON
+						;
+
+printA ::= 				OPEN_SQR valueA:e CLOSE_SQR {:RESULT = e;:}
+						;
+
+printB ::= 				OPEN_SQR valueB:e CLOSE_SQR {:RESULT = e;:}
+						;
+
+valueA ::= 				valueA:e1 COMMA value:e2 {:RESULT = mp.getPrint(e1,e2,ManejadorParser.PRINT);:}
+						| value:e {:RESULT = mp.getSimplePrint(e,ManejadorParser.PRINT);:}
+						;
+
+valueB ::= 				valueB:e1 COMMA value:e2 {:RESULT = mp.getPrint(e1,e2,ManejadorParser.PRINTLN);:}
+						| value:e {:RESULT = mp.getSimplePrint(e,ManejadorParser.PRINTLN);:}
+						;
+
+value ::= 				opNum:e {:RESULT = e;:}
+						| opBol:e {:RESULT = e;:}
+						;
+
+signo ::= 				PLUS:e {:RESULT = e;:}
+						| MINUS:e {:RESULT = e;:}
+						;
+
+formalAssign ::= 		assign:e SEMICOLON {:RESULT = e;:}
+						//| error:e {:mp.printError("Error en:" + e );:} SEMICOLON
+						;
+
+assign ::= 				assign1:e1 exp:e2 {:RESULT = mp.asignByToken(e1,e2);:}
+						;
+
+assign1 ::= 			VARIABLE:e ASSIGN {:RESULT = e;:}
+						;
+
+exp ::= 				opNum:e {:RESULT = e;:}
+						| opBol:e {:RESULT = e;:}
+						;
+
+opNum ::= 				e:e {:RESULT = mp.orderOpNum(e);:}
+						;
+
+e ::= 					e:e1 MULTI:e2 e:e3 {:RESULT = mp.getMulti(e1, e2, e3);:}
+						| e:e1 MINUS:e2 e:e3 {:RESULT = mp.getResta(e1, e2, e3);:}
+						| e:e1 DIVISION:e2 e:e3 {:RESULT = mp.getDivision(e1, e2, e3);:}
+						| e:e1 MODULE:e2 e:e3 {:RESULT = mp.getModulo(e1,e2, e3);:}
+						| e:e1 PLUS:e2 e:e3 {:RESULT = mp.getSumaConcatenacion(e1, e2, e3);:}
+						| OPEN_BRK e:e CLOSE_BRK {:RESULT = e;:}
+						| num:e {:RESULT = mp.getCuartetoNum(e);:}
+						| arrayPosition:e {::}
+						| VARIABLE:e {:RESULT = mp.getVariable(e);:}
+						| TEXT:e {:RESULT = mp.getCuartetoString(e);:}
+						| bool:e {:RESULT = mp.getCuartetoBool(e);:}
+						;
+
+num ::= 				NUM_INTEGER:e {:RESULT = mp.getSimbolInteger(e);:}
+						| NUM_FLOAT:e {:RESULT = mp.getSimbolFloat(e);:}
+						| NUM_DOUBLE:e {:RESULT = mp.getSimbolDouble(e);:}
+						;
+
+opBol ::= 				b:e {:RESULT = e;:}
+						;
+
+b ::= 					//b:e1 AND:e2 b:e3 {:RESULT = mp.getAnd(e1, e2, e3);:}
+						//| b:e1 AND:e2 b1:e3 {:RESULT = mp.getAnd(e1,e2,e3);:}
+						//| b:e1 OR:e2 b:e3 {:RESULT = mp.getOr(e1, e2, e3);:}
+						//| b:e1 OR:e2 b1:e3 {:RESULT = mp.getOr(e1,e2,e3);:}
+						b1:e1 AND:e2 b1:e3 {:RESULT = mp.getAnd(e1, e2, e3);:}
+						| b1:e1 OR:e2 b1:e3 {:RESULT = mp.getOr(e1, e2, e3);:}
+						| b:e1 AND:e2 b1:e3 {:RESULT = mp.getAnd(e1, e2, e3);:}
+						| b:e1 OR:e2 b1:e3 {:RESULT = mp.getOr(e1, e2, e3);:}
+						//| NOT:e1 b1:e2 {:RESULT = mp.getNot(e1,e2);:}
+						| NOT:e1 b:e2 {:RESULT = mp.getNot(e1,e2);:}
+						| OPEN_BRK b:e CLOSE_BRK {:RESULT = e;:}
+						| opRel:e {:RESULT = e;:}
+						;
+
+b1 ::= 					bool:e {:RESULT = mp.getBool(e);:}
+						| VARIABLE:e {:RESULT = mp.getVariableRel(e);:}
+						| arrayPosition:e {:RESULT = mp.getArrayPositionRel(e);:}
+						;
+
+opRel ::= 				r:e {:RESULT = e;:}
+						;
+
+r ::= 					expRel:e1 rel:e2 expRel:e3 {:RESULT = mp.getRelacion(e1, e2, e3);:}
+						;
+
+rel ::= 				HIGHER:e {:RESULT = e;:}
+						| LOWER:e {:RESULT = e;:}
+						| HIGHER_EQ:e {:RESULT = e;:}
+						| LOWER_EQ:e {:RESULT = e;:}
+						| NOT_EQUAL:e {:RESULT = e;:}
+						| EQUAL:e {:RESULT = e;:}
+						;
+
+expRel ::= 				opNum:e {:RESULT = e;:}
+						;
+
+bool ::= 				TRUE:e {:RESULT = mp.getSimbolBoolean(e);:}
+						| FALSE:e {:RESULT = mp.getSimbolBoolean(e);:}
+						;
+
+tipo ::= 				BOOLEAN:e {:RESULT = mp.getTipoByKey(e);:}
+						| CHAR:e {:RESULT = mp.getTipoByKey(e);:}
+						| BYTE:e {:RESULT = mp.getTipoByKey(e);:}
+						| INT:e {:RESULT = mp.getTipoByKey(e);:}
+						| LONG:e {:RESULT = mp.getTipoByKey(e);:}
+						| FLOAT:e {:RESULT = mp.getTipoByKey(e);:}
+						| DOUBLE:e {:RESULT = mp.getTipoByKey(e);:}
+						| STRING:e {:RESULT = mp.getTipoByKey(e);:}
+						;
