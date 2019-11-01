@@ -89,7 +89,7 @@ instruction ::=  		decl:e {:RESULT = e;:}
 						| doWhile:e {:RESULT = e;:}
 						| print:e {:RESULT = e;:}
 						| println:e {:RESULT = e;:}
-						| error:e {:mp.printError("Error en:" + e );:} SEMICOLON
+						| error:e SEMICOLON
 						;
 
 decl ::= 				tipo:e1 decls:e2 SEMICOLON {:RESULT = mp.setAsign(e2,e1);:}
@@ -171,7 +171,7 @@ elseB ::= 				ELSE:e1 block:e2 {::}
 						;
 
 while ::= 				WHILE:e1 OPEN_BRK opBol:e2 CLOSE_BRK whileA:e3 {:RESULT = mp.whileOperacion(e1,e2,e3);:}
-						| WHILE:e1 OPEN_BRK VARIABLE:e2 CLOSE_BRK whileA:e3 {:RESULT = mp.whileVariable(e1,e2,e3);:}
+						| WHILE:e1 OPEN_BRK VARIABLE:e2 CLOSE_BRK whileA:e3 {:RESULT = mp.whileVariable(e1,e2,e3, e2left, e2right);:}
 						| WHILE:e1 OPEN_BRK bool:e2 CLOSE_BRK whileA:e3 {:RESULT = mp.whileBool(e1,e2,e3);:}
 						;
 
@@ -180,7 +180,7 @@ whileA ::= 				instruction:e {:RESULT = e;:}
 						;
 
 doWhile ::= 			DO:e1 doWhileA:e3 WHILE OPEN_BRK opBol:e2 CLOSE_BRK {:RESULT = mp.doWhileOperacion(e1,e2,e3);:}
-						| DO:e1 doWhileA:e3 WHILE OPEN_BRK VARIABLE:e2 CLOSE_BRK {:RESULT = mp.doWhileVariable(e1,e2,e3);:}
+						| DO:e1 doWhileA:e3 WHILE OPEN_BRK VARIABLE:e2 CLOSE_BRK {:RESULT = mp.doWhileVariable(e1,e2,e3, e2left, e2right);:}
 						| DO:e1 doWhileA:e3 WHILE OPEN_BRK bool:e2 CLOSE_BRK {:RESULT = mp.doWhileBool(e1,e2,e3);:}
 						;
 
@@ -188,9 +188,9 @@ doWhileA ::= 			instruction:e {:RESULT = e;:}
 						| block:e {:RESULT = e;:}
 						;
 
-for ::= 				FOR OPEN_BRK assign:e1 COLON opBol:e2 COLON signo:e3 NUM_INTEGER:e4 CLOSE_BRK forA:e5 {:RESULT = mp.forOperacion(e1,e2,e3,e4,e5);:}
-						| FOR OPEN_BRK assign:e1 COLON VARIABLE:e2 COLON signo:e3 NUM_INTEGER:e4 CLOSE_BRK forA:e5 {:RESULT = mp.forVariable(e1,e2,e3,e4,e5);:}
-						| FOR OPEN_BRK assign:e1 COLON bool:e2 COLON signo:e3 NUM_INTEGER:e4 CLOSE_BRK forA:e5 {:RESULT = mp.forBool(e1,e2,e3,e4,e5);:}
+for ::= 				FOR OPEN_BRK assign:e1 COLON opBol:e2 COLON signo:e3 NUM_INTEGER:e4 CLOSE_BRK forA:e5 {:RESULT = mp.forOperacion(e1,e2,e3,e4,e5, e4left, e4right);:}
+						| FOR OPEN_BRK assign:e1 COLON VARIABLE:e2 COLON signo:e3 NUM_INTEGER:e4 CLOSE_BRK forA:e5 {:RESULT = mp.forVariable(e1,e2,e3,e4,e5, e2left, e2right, e4left, e4right);:}
+						| FOR OPEN_BRK assign:e1 COLON bool:e2 COLON signo:e3 NUM_INTEGER:e4 CLOSE_BRK forA:e5 {:RESULT = mp.forBool(e1,e2,e3,e4,e5, e4right, e4left);:}
 						;
 
 forA ::= 				instruction:e {:RESULT = e;:}
@@ -252,14 +252,14 @@ e ::= 					e:e1 MULTI:e2 e:e3 {:RESULT = mp.getMulti(e1, e2, e3);:}
 						| OPEN_BRK e:e CLOSE_BRK {:RESULT = e;:}
 						| num:e {:RESULT = mp.getCuartetoNum(e);:}
 						| arrayPosition:e {::}
-						| VARIABLE:e {:RESULT = mp.getVariable(e);:}
-						| TEXT:e {:RESULT = mp.getCuartetoString(e);:}
+						| VARIABLE:e {:RESULT = mp.getVariable(e, eleft, eright);:}
+						| TEXT:e {:RESULT = mp.getCuartetoString(e, eleft, eright);:}
 						| bool:e {:RESULT = mp.getCuartetoBool(e);:}
 						;
 
-num ::= 				NUM_INTEGER:e {:RESULT = mp.getSimbolInteger(e);:}
-						| NUM_FLOAT:e {:RESULT = mp.getSimbolFloat(e);:}
-						| NUM_DOUBLE:e {:RESULT = mp.getSimbolDouble(e);:}
+num ::= 				NUM_INTEGER:e {:RESULT = mp.getSimbolInteger(e, eleft, eright);:}
+						| NUM_FLOAT:e {:RESULT = mp.getSimbolFloat(e, eleft, eright);:}
+						| NUM_DOUBLE:e {:RESULT = mp.getSimbolDouble(e, eleft, eright);:}
 						;
 
 opBol ::= 				b:e {:RESULT = e;:}
@@ -280,7 +280,7 @@ b ::= 					//b:e1 AND:e2 b:e3 {:RESULT = mp.getAnd(e1, e2, e3);:}
 						;
 
 b1 ::= 					bool:e {:RESULT = mp.getBool(e);:}
-						| VARIABLE:e {:RESULT = mp.getVariableRel(e);:}
+						| VARIABLE:e {:RESULT = mp.getVariableRel(e, eleft, eright);:}
 						| arrayPosition:e {:RESULT = mp.getArrayPositionRel(e);:}
 						;
 
@@ -301,8 +301,8 @@ rel ::= 				HIGHER:e {:RESULT = e;:}
 expRel ::= 				opNum:e {:RESULT = e;:}
 						;
 
-bool ::= 				TRUE:e {:RESULT = mp.getSimbolBoolean(e);:}
-						| FALSE:e {:RESULT = mp.getSimbolBoolean(e);:}
+bool ::= 				TRUE:e {:RESULT = mp.getSimbolBoolean(e, eleft, eright);:}
+						| FALSE:e {:RESULT = mp.getSimbolBoolean(e, eleft, eright);:}
 						;
 
 tipo ::= 				BOOLEAN:e {:RESULT = mp.getTipoByKey(e);:}

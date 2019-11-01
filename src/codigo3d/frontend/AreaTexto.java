@@ -2,6 +2,7 @@ package codigo3d.frontend;
 
 import codigo3d.backend.manejadores.ManejadorAreaTexto;
 import java.awt.ComponentOrientation;
+import java.awt.Cursor;
 import java.awt.Toolkit;
 import java.awt.datatransfer.Clipboard;
 import java.awt.datatransfer.DataFlavor;
@@ -45,6 +46,7 @@ public class AreaTexto extends javax.swing.JPanel implements KeyListener, MouseL
         interprete.addMouseListener(this);
         mat = new ManejadorAreaTexto(this);
         navegador.setEditable(false);
+        navegador.setCursor(new java.awt.Cursor(java.awt.Cursor.TEXT_CURSOR));
         sizeLabel.setText(navegador.getPreferredSize().height + " x " + navegador.getPreferredSize().width);
         navegador.setComponentOrientation(ComponentOrientation.LEFT_TO_RIGHT);
     }
@@ -121,6 +123,7 @@ public class AreaTexto extends javax.swing.JPanel implements KeyListener, MouseL
         navegador.setBackground(new java.awt.Color(2, 36, 61));
         navegador.setBorder(javax.swing.BorderFactory.createEmptyBorder(7, 7, 7, 7));
         navegador.setForeground(new java.awt.Color(255, 255, 255));
+        navegador.setCursor(new java.awt.Cursor(java.awt.Cursor.TEXT_CURSOR));
         jScrollPane4.setViewportView(navegador);
 
         jButton5.setBackground(new java.awt.Color(254, 254, 254));
