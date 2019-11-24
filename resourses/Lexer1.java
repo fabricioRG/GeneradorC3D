@@ -3,7 +3,8 @@
 package codigo3d.backend.analizadores;
 
 import java_cup.runtime.*;
-import static codigo3d.backend.analizadores.sym1.*;
+import static codigo3d.backend.analizadores.sym.*;
+import codigo3d.backend.manejadores.ManejadorParser;
 
 
 /**
@@ -324,6 +325,7 @@ public class Lexer1 implements java_cup.runtime.Scanner {
 
   /* user code: */
     StringBuilder string = new StringBuilder();
+    ManejadorParser mp = null;
   
   private Symbol symbol(int type) {
     return new Symbol(type, yyline+1, yycolumn+1);
@@ -333,10 +335,15 @@ public class Lexer1 implements java_cup.runtime.Scanner {
     return new Symbol(type, yyline+1, yycolumn+1, value);
   }
 
-
   private void error(String message) {
-    System.out.println("Error en linea line "+(yyline+1)+", columna "+(yycolumn+1)+" : "+message);
+    //System.out.println("¡Error Lexico! Linea: "+(yyline+1)+", Columna: "+(yycolumn+1)+" : "+message);
+    mp.printError("¡Error Lexico! Linea: "+(yyline+1)+", Columna: "+(yycolumn+1)+" : "+message);
   }
+
+  public void setManejadorParser(ManejadorParser mp){
+  	this.mp = mp;
+  }
+
 
 
   /**

@@ -763,10 +763,8 @@ public class parser extends java_cup.runtime.lr_parser {
 	}
 
         public void syntax_error(Symbol s) {
-            System.out.println("¡Error de sintaxis! -> "+ s.value +" Linea "+(s.left)+" columna "+(s.right));
-            mp.printError("¡Error de sintaxis! -> "+ s.value +" Linea "+(s.left)+" columna "+(s.right) + "\n");
+            mp.printSintaxError("¡Error de sintaxis! -> "+ s.value +" Linea "+(s.left)+" columna "+(s.right) + "\n");
         }
-
 
 
 /** Cup generated class to encapsulate user supplied action code.*/

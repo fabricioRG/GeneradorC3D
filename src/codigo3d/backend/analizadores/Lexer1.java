@@ -4,6 +4,7 @@ package codigo3d.backend.analizadores;
 
 import java_cup.runtime.*;
 import static codigo3d.backend.analizadores.sym.*;
+import codigo3d.backend.manejadores.ManejadorParser;
 
 
 /**
@@ -324,6 +325,7 @@ public class Lexer1 implements java_cup.runtime.Scanner {
 
   /* user code: */
     StringBuilder string = new StringBuilder();
+    ManejadorParser mp = null;
   
   private Symbol symbol(int type) {
     return new Symbol(type, yyline+1, yycolumn+1);
@@ -333,10 +335,14 @@ public class Lexer1 implements java_cup.runtime.Scanner {
     return new Symbol(type, yyline+1, yycolumn+1, value);
   }
 
-
-  private void error(String message) {
-    System.out.println("Error en linea line "+(yyline+1)+", columna "+(yycolumn+1)+" : "+message);
+  private void error(String message) throws Exception {
+    throw new Exception("Lexico °° "+ message +" Linea: "+(yyline+1)+", Columna: "+(yycolumn+1));
   }
+
+  public void setManejadorParser(ManejadorParser mp){
+  	this.mp = mp;
+  }
+
 
 
   /**
@@ -581,7 +587,7 @@ public class Lexer1 implements java_cup.runtime.Scanner {
    * @return      the next token
    * @exception   java.io.IOException  if any I/O-Error occurs
    */
-  public java_cup.runtime.Symbol next_token() throws java.io.IOException {
+  public java_cup.runtime.Symbol next_token() throws java.io.IOException, Exception {
     int zzInput;
     int zzAction;
 
@@ -958,7 +964,7 @@ public class Lexer1 implements java_cup.runtime.Scanner {
    *
    * This code was contributed by Karl Meissner <meissnersd@yahoo.com>
    */
-  public java_cup.runtime.Symbol debug_next_token() throws java.io.IOException {
+  public java_cup.runtime.Symbol debug_next_token() throws java.io.IOException, Exception {
     java_cup.runtime.Symbol s = next_token();
     System.out.println( "line:" + (yyline+1) + " col:" + (yycolumn+1) + " --"+ yytext() + "--" + getTokenName(s.sym) + "--");
     return s;

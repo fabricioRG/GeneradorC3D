@@ -52,6 +52,9 @@ public class ManejadorParser {
     public final static String NOT_EQUAL = "!=";
     public final static String EQUAL = "==";
     public final static String CICLO = "CICLO";
+    public final static int ERROR_NUM = 1;
+    public final static int ERROR_STRING = 2;
+    public final static int ERROR_BOOL = 3;
     private String etiquetaResult = null;
 
     private ManejadorAreaTexto manejadorAreaTexto = null;
@@ -142,6 +145,34 @@ public class ManejadorParser {
     public Cuarteto getCuartetoString(String text, int fila, int columna) {
         return new CuartetoBuilder().resultado(getSimbolString(text, fila, columna)).build();
     }
+    
+    private String getValorInfo(Simbolo sim){
+        return " [ " + sim.getLexema() + ", " + sim.getToken().getNombre() + ", " + sim.getFila() + ", " + sim.getColumna() + " ] ";
+    }
+    
+    private String getInvalidSimbol(Simbolo sim1, Simbolo sim2, int error){
+        switch(error){
+            case ERROR_NUM:
+                if(TablaTipos.getInstance().isNumber(sim1.getToken())){
+                    return getValorInfo(sim2);
+                } else {
+                    return getValorInfo(sim1);
+                }
+            case ERROR_STRING:
+                if(TablaTipos.getInstance().isString(sim1.getToken())){
+                    return getValorInfo(sim2);
+                } else {
+                    return getValorInfo(sim1);
+                }
+            case ERROR_BOOL:
+                if(TablaTipos.getInstance().isBoolean(sim1.getToken())){
+                    return getValorInfo(sim2);
+                } else {
+                    return getValorInfo(sim1);
+                }
+        }
+        return null;
+    }
 
     private boolean isNotTypeNumber(Tipo token1, Tipo token2) {
         return TablaTipos.getInstance().isString(token1) || TablaTipos.getInstance().isString(token2)
@@ -167,67 +198,62 @@ public class ManejadorParser {
         return sim1;
     }
 
-    public Cuarteto getSumaConcatenacion(Cuarteto sim2, String plus, Cuarteto sim1) {
+    public Cuarteto getSumaConcatenacion(Cuarteto sim2, String plus, Cuarteto sim1) throws Exception {
         if (TablaTipos.getInstance().isString(sim1.getResultado().getToken())
                 || TablaTipos.getInstance().isString(sim2.getResultado().getToken())) {
             return new CuartetoBuilder().operador(plus).operando1(sim2.getResultado()).
                     operando2(sim1.getResultado()).resultado(getSimbolString(getResult())).siguiente(setAtLast(sim1, sim2)).build();
         } else if (TablaTipos.getInstance().isBoolean(sim1.getResultado().getToken())
                 || TablaTipos.getInstance().isBoolean(sim2.getResultado().getToken())) {
-            printError("Concatenacion erronea entre booleano");
+            throw new Exception("Concatenacion erronea entre booleano");
         } else {
             Simbolo simResult = new Simbolo(getResult(), getTipo(sim1.getResultado(), sim2.getResultado()));
             return new CuartetoBuilder().operador(plus).operando1(sim2.getResultado()).
                     operando2(sim1.getResultado()).resultado(simResult).siguiente(setAtLast(sim1, sim2)).build();
         }
-        return null;
     }
 
-    public Cuarteto getMulti(Cuarteto sim2, String multi, Cuarteto sim1) {
+    public Cuarteto getMulti(Cuarteto sim2, String multi, Cuarteto sim1) throws Exception {
         if (isNotTypeNumber(sim1.getResultado().getToken(), sim2.getResultado().getToken())) {
-            printError("Multiplicacion entre numeros no es posible (No son numeros) " + sim2.getResultado().getLexema() + " - " + sim1.getResultado().getLexema());
+            throw new Exception("Multiplicacion - Valor no valido:" + getInvalidSimbol(sim2.getResultado(), sim1.getResultado(), ERROR_NUM));
         } else {
             Simbolo simResult = new Simbolo(getResult(), getTipo(sim1.getResultado(), sim2.getResultado()));
             return new CuartetoBuilder().operador(multi).operando1(sim2.getResultado()).
                     operando2(sim1.getResultado()).resultado(simResult).siguiente(setAtLast(sim1, sim2)).build();
         }
-        return null;
     }
 
-    public Cuarteto getDivision(Cuarteto sim2, String division, Cuarteto sim1) {//sim2 <- sim1
+    public Cuarteto getDivision(Cuarteto sim2, String division, Cuarteto sim1) throws Exception{//sim2 <- sim1
         if (isNotTypeNumber(sim1.getResultado().getToken(), sim2.getResultado().getToken())) {
-            printError("Division entre numeros no es posible (No son numeros) " + sim2.getResultado().getLexema() + " - " + sim1.getResultado().getLexema());
+            throw new Exception("Division entre numeros no es posible (No son numeros) " + sim2.getResultado().getLexema() + " - " + sim1.getResultado().getLexema());
         } else {
             Simbolo simResult = new Simbolo(getResult(), getTipo(sim1.getResultado(), sim2.getResultado()));
             return new CuartetoBuilder().operador(division).operando1(sim2.getResultado()).
                     operando2(sim1.getResultado()).resultado(simResult).siguiente(setAtLast(sim1, sim2)).build();
         }
-        return null;
     }
 
-    public Cuarteto getResta(Cuarteto sim2, String minus, Cuarteto sim1) {
+    public Cuarteto getResta(Cuarteto sim2, String minus, Cuarteto sim1) throws Exception {
         if (isNotTypeNumber(sim1.getResultado().getToken(), sim2.getResultado().getToken())) {
-            printError("Resta entre numeros no es posible (No son numeros) " + sim2.getResultado().getLexema() + " - " + sim1.getResultado().getLexema());
+            throw new Exception("Resta entre numeros no es posible (No son numeros) " + sim2.getResultado().getLexema() + " - " + sim1.getResultado().getLexema());
         } else {
             Simbolo simResult = new Simbolo(getResult(), getTipo(sim1.getResultado(), sim2.getResultado()));
             return new CuartetoBuilder().operador(minus).operando1(sim2.getResultado()).
                     operando2(sim1.getResultado()).resultado(simResult).siguiente(setAtLast(sim1, sim2)).build();
         }
-        return null;
     }
 
-    public Cuarteto getModulo(Cuarteto sim2, String module, Cuarteto sim1) {
+    public Cuarteto getModulo(Cuarteto sim2, String module, Cuarteto sim1) throws Exception {
         if (isNotTypeNumber(sim1.getResultado().getToken(), sim2.getResultado().getToken())) {
-            printError("Modulo entre numeros no es posible (No son numeros) " + sim2.getResultado().getLexema() + " - " + sim1.getResultado().getLexema());
+            throw new Exception("Modulo entre numeros no es posible (No son numeros) " + sim2.getResultado().getLexema() + " - " + sim1.getResultado().getLexema());
         } else {
             Simbolo simResult = new Simbolo(getResult(), getTipo(sim1.getResultado(), sim2.getResultado()));
             return new CuartetoBuilder().operador(module).operando1(sim2.getResultado()).
                     operando2(sim1.getResultado()).resultado(simResult).siguiente(setAtLast(sim1, sim2)).build();
         }
-        return null;
     }
 
-    public Cuarteto getRelacion(Cuarteto sim2, String rel, Cuarteto sim1) {
+    public Cuarteto getRelacion(Cuarteto sim2, String rel, Cuarteto sim1) throws Exception {
         if (!isNotTypeNumber(sim1.getResultado().getToken(), sim2.getResultado().getToken())) {
             if (sim1.getOperador() == null && sim2.getOperador() == null) {
                 if (TablaTipos.getInstance().isCompatible(sim2.getResultado().getToken(), sim1.getResultado().getToken())) {
@@ -237,7 +263,7 @@ public class ManejadorParser {
                     return new CuartetoBuilder().operador(rel).operando1(getSimbolString(setEtiquetaResult(getEtiqueta()))).
                             operando2(getSimbolString(getSimpleEtiqueta())).resultado(getSimbolBoolean(getEtiqueta())).restriccion(rela).build();
                 } else {
-                    printError("Relacion " + rel + " entre numero no es posible (Diferencia de tipos) " + sim2.getResultado().getLexema() + " - " + sim1.getResultado().getLexema());
+                    throw new Exception("Relacion " + rel + " entre numero no es posible (Diferencia de tipos) " + sim2.getResultado().getLexema() + " - " + sim1.getResultado().getLexema());
                 }
             } else {
                 if (sim1.getOperador() == null) {
@@ -249,7 +275,7 @@ public class ManejadorParser {
                 }
             }
         } else {
-            printError("Relacion erronea entre valores (No son numeros) " + sim2.getResultado().getLexema() + " - " + sim1.getResultado().getLexema());
+            throw new Exception("Relacion erronea entre valores (No son numeros) " + sim2.getResultado().getLexema() + " - " + sim1.getResultado().getLexema());
         }
         return null;
     }
@@ -261,7 +287,7 @@ public class ManejadorParser {
                 operando2(getSimbolString(getSimpleEtiqueta())).resultado(getSimbolBoolean(getEtiqueta())).restriccion(simb).build();
     }
 
-    public Cuarteto getVariableRel(String key, int fila, int columna) {
+    public Cuarteto getVariableRel(String key, int fila, int columna) throws Exception {
         if (tablaSimbolos.existSimbol(key)) {
             Cuarteto var = getVariable(key, fila, columna);
             var.setOperador(VAR_BOOL);
@@ -269,12 +295,11 @@ public class ManejadorParser {
                 return new CuartetoBuilder().operando1(getSimbolString(setEtiquetaResult(getEtiqueta()))).
                         operando2(getSimbolString(getSimpleEtiqueta())).resultado(getSimbolBoolean(getEtiqueta())).restriccion(var).build();
             } else {
-                printError("Variable " + key + " no puede ser de tipo booleana ");
+                throw new Exception("Variable " + key + " no puede ser de tipo booleana ");
             }
         } else {
-            printError("Variable " + key + " no ha sido declarada");
+            throw new Exception("Variable " + key + " no ha sido declarada");
         }
-        return null;
     }
 
     public Cuarteto getArrayPositionRel(Cuarteto arrayPosition) {
@@ -285,17 +310,16 @@ public class ManejadorParser {
         return null;
     }
 
-    public Cuarteto getNot(String not, Cuarteto sim) {
+    public Cuarteto getNot(String not, Cuarteto sim) throws Exception {
         if (TablaTipos.getInstance().isBoolean(sim.getResultado().getToken())) {
             return new CuartetoBuilder().operador(not).operando1(sim.getResultado()).
                     resultado(getSimbolBoolean(getResult())).build();
         } else {
-            printError("Variable " + sim.getResultado().getLexema() + " no es de tipo booleana ");
+            throw new Exception("Variable " + sim.getResultado().getLexema() + " no es de tipo booleana ");
         }
-        return null;
     }
 
-    public Cuarteto getOr(Cuarteto sim1, String or, Cuarteto sim2) {
+    public Cuarteto getOr(Cuarteto sim1, String or, Cuarteto sim2) throws Exception {
         if (areBoolean(sim1.getResultado(), sim2.getResultado())) {
             Cuarteto sim3 = sim1;
             Cuarteto i = sim1.getSiguiente();
@@ -316,9 +340,8 @@ public class ManejadorParser {
             }
             return sim1;
         } else {
-            printError("Relacion " + or + " entre numeros no es posible (Diferencia de tipos) " + sim2.getResultado().getLexema() + " - " + sim1.getResultado().getLexema());
+            throw new Exception("Relacion " + or + " entre numeros no es posible (Diferencia de tipos) " + sim2.getResultado().getLexema() + " - " + sim1.getResultado().getLexema());
         }
-        return null;
     }
 
     private boolean areBoolean(Simbolo sim1, Simbolo sim2) {
@@ -326,7 +349,7 @@ public class ManejadorParser {
                 && TablaTipos.getInstance().isBoolean(sim2.getToken());
     }
 
-    public Cuarteto getAnd(Cuarteto sim1, String and, Cuarteto sim2) {
+    public Cuarteto getAnd(Cuarteto sim1, String and, Cuarteto sim2) throws Exception {
         if (areBoolean(sim1.getResultado(), sim2.getResultado())) {
             Cuarteto sim3 = sim1;
             Cuarteto i = sim1.getSiguiente();
@@ -343,9 +366,8 @@ public class ManejadorParser {
             }
             return sim1;
         } else {
-            printError("Relacion " + and + " entre numeros no es posible (Diferencia de tipos) " + sim2.getResultado().getLexema() + " - " + sim1.getResultado().getLexema());
+            throw new Exception("Relacion " + and + " entre numeros no es posible (Diferencia de tipos) " + sim2.getResultado().getLexema() + " - " + sim1.getResultado().getLexema());
         }
-        return null;
     }
 
     public Cuarteto orderOpNum(Cuarteto operacion) {
@@ -401,7 +423,7 @@ public class ManejadorParser {
         return new CuartetoBuilder().operador(name).build();
     }
 
-    public Cuarteto setAsign(Cuarteto cuarteto, Tipo tipo) {
+    public Cuarteto setAsign(Cuarteto cuarteto, Tipo tipo) throws Exception {
         Cuarteto inicial = asign(cuarteto, tipo);
         Cuarteto k = inicial;
         Cuarteto i = cuarteto.getSiguiente();
@@ -413,7 +435,7 @@ public class ManejadorParser {
         return inicial;
     }
 
-    private Cuarteto asign(Cuarteto cuarteto, Tipo tipo) {
+    private Cuarteto asign(Cuarteto cuarteto, Tipo tipo) throws Exception {
         if (!tablaSimbolos.existSimbol(cuarteto.getOperador())) {
             if (cuarteto.getComponentes() != null) {
                 if (TablaTipos.getInstance().isCompatible(cuarteto.getComponentes().getResultado().getToken(), tipo)) {
@@ -421,19 +443,18 @@ public class ManejadorParser {
                     return new CuartetoBuilder().operador(ASSIGN).componentes(cuarteto.
                             getComponentes()).operando1(cuarteto.getComponentes().getResultado()).resultado(new Simbolo(cuarteto.getOperador(), tipo)).build();
                 } else {
-                    printError("Asignacion entre tipo y variable no valida");
+                    throw new Exception("Asignacion entre tipo y variable no valida");
                 }
             } else {
                 tablaSimbolos.setSimbol(cuarteto.getOperador(), tipo);
                 return new CuartetoBuilder().build();
             }
         } else {
-            printError("Variable " + cuarteto.getOperador() + " no existente o no declarada");
+            throw new Exception("Variable " + cuarteto.getOperador() + " no existente o no declarada");
         }
-        return null;
     }
 
-    public Cuarteto asignByToken(String token, Cuarteto expresion) {
+    public Cuarteto asignByToken(String token, Cuarteto expresion) throws Exception {
         if (tablaSimbolos.existSimbol(token)) {
             Simbolo sim = tablaSimbolos.getSimbol(token);
             Cuarteto last = getLastCuarteto(expresion);
@@ -441,13 +462,12 @@ public class ManejadorParser {
                 return new CuartetoBuilder().operador(ASSIGN).componentes(expresion).
                         operando1(last.getResultado()).resultado(sim).build();
             } else {
-                printError("Variable " + token + " no es compatible con expresion de tipo " + expresion.getResultado().getToken().getNombre());
+                throw new Exception("Variable " + token + " no es compatible con expresion de tipo " + expresion.getResultado().getToken().getNombre());
 
             }
         } else {
-            printError("Variable " + token + " no existente o no declarada");
+            throw new Exception("Variable " + token + " no existente o no declarada");
         }
-        return null;
     }
 
     public Cuarteto getSimpleArrayAsign(String text) {
@@ -477,16 +497,15 @@ public class ManejadorParser {
         return j;
     }
 
-    public Cuarteto getVariable(String var, int fila, int columna) {
+    public Cuarteto getVariable(String var, int fila, int columna) throws Exception {
         if (tablaSimbolos.existSimbol(var)) {
             Simbolo sim = tablaSimbolos.getSimbol(var);
             sim.setFila(fila);
             sim.setColumna(columna);
             return new CuartetoBuilder().resultado(sim).build();
         } else {
-            printError("Variable " + var + " no existente o no declarada");
+            throw new Exception("Variable " + var + " no existente o no declarada");
         }
-        return null;
     }
 
     public void setSimpleArray(Cuarteto sim, Tipo tipo) {
@@ -503,7 +522,7 @@ public class ManejadorParser {
         return sim2;
     }
 
-    public Cuarteto whileOperacion(String whil, Cuarteto restriccion, Cuarteto instructions) {
+    public Cuarteto whileOperacion(String whil, Cuarteto restriccion, Cuarteto instructions) throws Exception {
         if (TablaTipos.getInstance().isBoolean(restriccion.getResultado().getToken())) {
             Cuarteto last = getLastCuarteto(restriccion);
             etiquetaResult = getEtiqueta();
@@ -512,9 +531,8 @@ public class ManejadorParser {
             setOperadorAll(restriccion);
             return setAtLast(restriccion, result);
         } else {
-            printError("Variable " + restriccion.getResultado().getLexema() + " no es de tipo booleana");
+            throw new Exception("Variable " + restriccion.getResultado().getLexema() + " no es de tipo booleana");
         }
-        return null;
     }
 
     public void setOperadorAll(Cuarteto head) {
@@ -525,7 +543,7 @@ public class ManejadorParser {
         }
     }
 
-    public Cuarteto whileVariable(String whil, String var, Cuarteto instructions, int fila, int columna) {
+    public Cuarteto whileVariable(String whil, String var, Cuarteto instructions, int fila, int columna) throws Exception {
         Cuarteto sim = getVariableRel(var, fila, columna);
         etiquetaResult = getEtiqueta();
         Cuarteto result = new CuartetoBuilder().operador(whil).operando1(sim.getOperando2()).
@@ -543,7 +561,7 @@ public class ManejadorParser {
         return setAtLast(sim1, result);
     }
 
-    public Cuarteto doWhileOperacion(String doW, Cuarteto restriccion, Cuarteto instructions) {
+    public Cuarteto doWhileOperacion(String doW, Cuarteto restriccion, Cuarteto instructions) throws Exception {
         if (TablaTipos.getInstance().isBoolean(restriccion.getResultado().getToken())) {
             Cuarteto last = getLastCuarteto(restriccion);
             etiquetaResult = getEtiqueta();
@@ -553,12 +571,11 @@ public class ManejadorParser {
             restriccion.setComponentes(instructions);
             return setAtLast(restriccion, result);
         } else {
-            printError("Variable " + restriccion.getResultado().getLexema() + " no es de tipo booleana");
+            throw new Exception("Variable " + restriccion.getResultado().getLexema() + " no es de tipo booleana");
         }
-        return null;
     }
 
-    public Cuarteto doWhileVariable(String doW, String var, Cuarteto instructions, int fila, int columna) {
+    public Cuarteto doWhileVariable(String doW, String var, Cuarteto instructions, int fila, int columna) throws Exception {
         Cuarteto sim = getVariableRel(var, fila, columna);
         etiquetaResult = getEtiqueta();
         Cuarteto result = new CuartetoBuilder().operador(doW).operando1(sim.getOperando2()).
@@ -586,7 +603,7 @@ public class ManejadorParser {
         return null;
     }
 
-    public Cuarteto setArrayAsign(Cuarteto arrayPosition, Cuarteto expresion) {
+    public Cuarteto setArrayAsign(Cuarteto arrayPosition, Cuarteto expresion) throws Exception {
         if (TablaTipos.getInstance().isCompatible(arrayPosition.getResultado().getToken(), expresion.getResultado().getToken())) {
             if (TablaTipos.getInstance().isCompatible(expresion.getResultado().getToken(), arrayPosition.getResultado().getToken())) {
                 Cuarteto last = getLastCuarteto(arrayPosition);
@@ -594,15 +611,14 @@ public class ManejadorParser {
                 return new CuartetoBuilder().operador(ARRAY_ASIGN).resultado(last2.getResultado()).
                         operando1(last.getResultado()).componentes(expresion).auxiliar(arrayPosition).build();
             } else {
-                printError("Variable " + arrayPosition.getResultado().getLexema() + " no es compatible");
+                throw new Exception("Variable " + arrayPosition.getResultado().getLexema() + " no es compatible");
             }
         } else {
-            printError("No es compatible");
+            throw new Exception("No es compatible");
         }
-        return null;
     }
 
-    public Cuarteto forOperacion(Cuarteto asignacion, Cuarteto opBol, String signo, String entero, Cuarteto instructions, int fila, int columna) {
+    public Cuarteto forOperacion(Cuarteto asignacion, Cuarteto opBol, String signo, String entero, Cuarteto instructions, int fila, int columna) throws Exception {
         if (TablaTipos.getInstance().isBoolean(opBol.getResultado().getToken())) {
             Cuarteto last = getLastCuarteto(opBol);
             Cuarteto instruccion = null;
@@ -621,13 +637,12 @@ public class ManejadorParser {
             setAtLast(opBol, result);
             return setAtLast(asignacion, opBol);
         } else {
-            //Error
+            throw new Exception();
         }
-        return null;
     }
 
     public Cuarteto forVariable(Cuarteto asignacion, String var, String signo, String entero, Cuarteto instructions,
-            int fila1, int columna1, int fila2, int columna2) {
+            int fila1, int columna1, int fila2, int columna2) throws Exception {
         Cuarteto sim = getVariableRel(var, fila1, columna1);
         Cuarteto instruccion = null;
         Cuarteto num = getCuartetoNum(getSimbolInteger(entero, fila2, columna2));
@@ -647,7 +662,7 @@ public class ManejadorParser {
         return setAtLast(asignacion, sim);
     }
 
-    public Cuarteto forBool(Cuarteto asignacion, Simbolo bool, String signo, String entero, Cuarteto instructions, int fila, int columna) {
+    public Cuarteto forBool(Cuarteto asignacion, Simbolo bool, String signo, String entero, Cuarteto instructions, int fila, int columna) throws Exception {
         Cuarteto sim = getBool(bool);
         Cuarteto instruccion = null;
         Cuarteto num = getCuartetoNum(getSimbolInteger(entero, fila, columna));
@@ -869,8 +884,12 @@ public class ManejadorParser {
         manejadorAreaTexto.printTerminal(print + SALTO_LN);
     }
 
-    public void printError(String error) {
-        manejadorAreaTexto.printError(error + SALTO_LN);
+    public void printError(String error) throws Exception {
+        throw new Exception(error);
+    }
+    
+    public void printSintaxError(String error){
+        manejadorAreaTexto.printTerminal(error + SALTO_LN);
     }
 
 }

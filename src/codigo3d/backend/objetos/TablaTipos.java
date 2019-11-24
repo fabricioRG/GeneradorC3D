@@ -121,6 +121,11 @@ public class TablaTipos {
         return token.getNombre().equals(TIPOS[BOOLEAN]);
     }
     
+    public boolean isNumber(Tipo token){
+        return isByte(token) || isChar(token) || isInt(token) || isLong(token) || isFloat(token)
+                || isDouble(token);
+    }
+    
     public boolean isCompatible(Tipo token1, Tipo token2){
         if(isString(token1) || isString(token2)){
             return token1.getNombre().equals(token2.getNombre());

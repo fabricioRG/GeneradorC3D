@@ -2,6 +2,7 @@ package codigo3d.backend.analizadores;
 
 import java_cup.runtime.*;
 import static codigo3d.backend.analizadores.sym.*;
+import codigo3d.backend.manejadores.ManejadorParser;
 
 %% //separador de area
 
@@ -16,6 +17,7 @@ import static codigo3d.backend.analizadores.sym.*;
 
 %{
     StringBuilder string = new StringBuilder();
+    ManejadorParser mp = null;
   
   private Symbol symbol(int type) {
     return new Symbol(type, yyline+1, yycolumn+1);
@@ -25,10 +27,14 @@ import static codigo3d.backend.analizadores.sym.*;
     return new Symbol(type, yyline+1, yycolumn+1, value);
   }
 
-
-  private void error(String message) {
-    System.out.println("Error en linea line "+(yyline+1)+", columna "+(yycolumn+1)+" : "+message);
+  private void error(String message)throws Exception {
+    mp.printError("Lexico °° "+ message +" Linea: "+(yyline+1)+", Columna: "+(yycolumn+1));
   }
+
+  public void setManejadorParser(ManejadorParser mp){
+  	this.mp = mp;
+  }
+
 %}
 
 LineTerminator = \r|\n|\r\n

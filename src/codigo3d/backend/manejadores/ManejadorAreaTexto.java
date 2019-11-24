@@ -36,14 +36,16 @@ public class ManejadorAreaTexto {
     }
 
     public void runText(String entrada) {
+        ManejadorParser mp = new ManejadorParser(this);
         if (!entrada.trim().isEmpty()) {
             StringReader sr = new StringReader(entrada);
             Lexer1 lexer = new Lexer1(sr);
-            parser pars = new parser(lexer, new ManejadorParser(this));
+            lexer.setManejadorParser(mp);
+            parser pars = new parser(lexer, mp);
             try {
                 pars.parse();
             } catch (Exception e) {
-                e.printStackTrace();
+                printError(e.getMessage());
             }
         }
     }
@@ -89,7 +91,7 @@ public class ManejadorAreaTexto {
     }
 
     public void printError(String error){
-        at.getNavegador().setText("Error: " + error);
+        at.getNavegador().setText("Tipo de error: " + error);
     }
     
 }
