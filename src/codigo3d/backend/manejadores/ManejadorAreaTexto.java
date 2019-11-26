@@ -3,20 +3,7 @@ package codigo3d.backend.manejadores;
 import codigo3d.frontend.AreaTexto;
 import codigo3d.backend.analizadores.Lexer1;
 import codigo3d.backend.analizadores.parser;
-import java.awt.Color;
-import java.awt.Toolkit;
-import java.awt.datatransfer.Clipboard;
-import java.awt.datatransfer.DataFlavor;
-import java.awt.datatransfer.Transferable;
 import java.io.StringReader;
-import java.util.List;
-import javax.swing.JOptionPane;
-import javax.swing.text.DefaultStyledDocument;
-import javax.swing.text.SimpleAttributeSet;
-import javax.swing.text.Style;
-import javax.swing.text.StyleConstants;
-import javax.swing.text.StyleContext;
-import javax.swing.text.StyledDocument;
 
 /**
  *
@@ -26,6 +13,7 @@ public class ManejadorAreaTexto {
 
     private AreaTexto at = null;
     public static int SALTO_LINEA = 10;
+    public static String ERROR_MESSAGE = "---------ERROR---------\n";
 
     public ManejadorAreaTexto(AreaTexto at) {
         this.at = at;
@@ -45,6 +33,7 @@ public class ManejadorAreaTexto {
             try {
                 pars.parse();
             } catch (Exception e) {
+                e.printStackTrace();
                 printError(e.getMessage());
             }
         }
@@ -91,7 +80,7 @@ public class ManejadorAreaTexto {
     }
 
     public void printError(String error){
-        at.getNavegador().setText("Tipo de error: " + error);
+        at.getNavegador().setText(ERROR_MESSAGE + "Tipo de error: " + error);
     }
     
 }

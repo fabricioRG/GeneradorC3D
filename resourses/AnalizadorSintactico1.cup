@@ -105,7 +105,7 @@ decl1 ::= 				assign2:e {:RESULT = e;:}
 assign2 ::= 			assign3:e1 exp:e2 {:RESULT = mp.getAsign(e1, e2);:}
 						;
 
-assign3 ::= 			VARIABLE:e ASSIGN {:RESULT = e;:}
+assign3 ::= 			VARIABLE:e ASSIGN:e2 {:RESULT = e + "[" + eleft + "-" + eright + "]";:}
 						;
 
 array ::= 				ARRAY tipo:e1 OPEN_SQR opNum:e2 CLOSE_SQR assignA:e3 SEMICOLON {:RESULT = mp.setArray(e3, e1);:}
@@ -255,7 +255,7 @@ e ::= 					e:e1 MULTI:e2 e:e3 {:RESULT = mp.getMulti(e1, e2, e3);:}
 						| bool:e {:RESULT = mp.getCuartetoBool(e);:}
 						;
 
-num ::= 				NUM_INTEGER:e {:RESULT = mp.getSimbolInteger(e, eleft, eright);:}
+num ::= 				NUM_INTEGER:e {:RESULT = mp.getSimbolEntero(e, eleft, eright);:}
 						| NUM_FLOAT:e {:RESULT = mp.getSimbolFloat(e, eleft, eright);:}
 						| NUM_DOUBLE:e {:RESULT = mp.getSimbolDouble(e, eleft, eright);:}
 						;
