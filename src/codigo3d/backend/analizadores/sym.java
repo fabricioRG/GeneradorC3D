@@ -25,7 +25,9 @@ public class sym {
   public static final int AND = 11;
   public static final int OR = 12;
   public static final int COMMA = 24;
+  public static final int SEPARATOR = 52;
   public static final int PLUS = 32;
+  public static final int MAIN = 50;
   public static final int ASSIGN = 31;
   public static final int IF = 16;
   public static final int LOWER_EQ = 37;
@@ -33,6 +35,7 @@ public class sym {
   public static final int CLOSE_BRK = 27;
   public static final int EOF = 0;
   public static final int BOOLEAN = 2;
+  public static final int RETURN = 51;
   public static final int EQUAL = 42;
   public static final int TRUE = 13;
   public static final int error = 1;
@@ -54,8 +57,10 @@ public class sym {
   public static final int NUM_FLOAT = 46;
   public static final int FALSE = 14;
   public static final int DIVISION = 35;
+  public static final int SCANS = 48;
   public static final int PRINT = 22;
   public static final int DO = 20;
+  public static final int SCANN = 49;
   public static final String[] terminalNames = new String[] {
   "EOF",
   "error",
@@ -104,7 +109,12 @@ public class sym {
   "NUM_INTEGER",
   "NUM_DOUBLE",
   "NUM_FLOAT",
-  "VARIABLE"
+  "VARIABLE",
+  "SCANS",
+  "SCANN",
+  "MAIN",
+  "RETURN",
+  "SEPARATOR"
   };
 }
 

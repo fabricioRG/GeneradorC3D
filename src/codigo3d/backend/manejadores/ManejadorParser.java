@@ -6,6 +6,7 @@
 package codigo3d.backend.manejadores;
 
 import codigo3d.backend.objetos.*;
+import java.util.LinkedList;
 import java.util.Stack;
 
 /**
@@ -33,6 +34,7 @@ public class ManejadorParser {
     public final static String PRINT = "PRINT";
     public final static String PRINTLN = "PRINTLN";
     public final static String ASSIGN = "<-";
+    public final static String ASSIGN_BOOL = "<-BOOL";
     public final static String WHILE = "WHILE";
     public final static String FOR = "FOR";
     public final static String DO = "DO";
@@ -45,6 +47,7 @@ public class ManejadorParser {
     public final static String MINUS = "-";
     public final static String BOOL = "BOOL";
     public final static String VAR_BOOL = "VARBOOL";
+    public final static String SCAN = "SCAN";
     public final static String LOWER_EQ = "<=";
     public final static String HIGHER_EQ = ">=";
     public final static String LOWER = "<";
@@ -52,6 +55,7 @@ public class ManejadorParser {
     public final static String NOT_EQUAL = "!=";
     public final static String EQUAL = "==";
     public final static String CICLO = "CICLO";
+    public final static String SPACE = " ";
     public final static long TIPE_INT = (long) Math.pow(2, 31);
     public final static long TIPE_BYTE = (long) Math.pow(2, 16);
     public final static long TIPE_CHAR = (long) Math.pow(2, 8);
@@ -108,16 +112,16 @@ public class ManejadorParser {
     }
 
     public Simbolo getSimbolBoolean(String bool) {
-        return new Simbolo(bool, TablaTipos.getInstance().getBoolean());
+        return new SimboloBuilder().lexema(bool).token(TablaTipos.getInstance().getBoolean()).build();
     }
 
     public Simbolo getSimbolBoolean(String bool, int fila, int columna) {
-        return new Simbolo(bool, TablaTipos.getInstance().getBoolean(), fila, columna);
+        return new SimboloBuilder().lexema(bool).token(TablaTipos.getInstance().getBoolean()).fila(fila).columna(columna).build();
     }
 
     public Simbolo getSimbolEntero(String num, int fila, int columna) {
         long value = Long.parseLong(num);
-        Simbolo sim = new Simbolo(num, TablaTipos.getInstance().getInt(), fila, columna);
+        Simbolo sim = new SimboloBuilder().lexema(num).token(TablaTipos.getInstance().getInt()).fila(fila).columna(columna).build();
         if (value <= TIPE_CHAR) {
             sim.setToken(TablaTipos.getInstance().getChar());
         } else if (value <= TIPE_BYTE) {
@@ -131,20 +135,19 @@ public class ManejadorParser {
     }
 
     public Simbolo getSimbolFloat(String num, int fila, int columna) {
-        return new Simbolo(num.substring(0, num.length() - 1), TablaTipos.getInstance().getFloat());
+        return new SimboloBuilder().lexema(num.substring(0, num.length() - 1)).token(TablaTipos.getInstance().getFloat()).build();
     }
 
     public Simbolo getSimbolDouble(String num, int fila, int columna) {
-        return new Simbolo(num, TablaTipos.getInstance().getDouble());
+        return new SimboloBuilder().lexema(num).token(TablaTipos.getInstance().getDouble()).build();
     }
 
     public Simbolo getSimbolString(String text) {
-        return new Simbolo(text, TablaTipos.getInstance().getString());
+        return new SimboloBuilder().lexema(text).token(TablaTipos.getInstance().getString()).build();
     }
 
     public Simbolo getSimbolString(String text, int fila, int columna) {
-        Simbolo sim = new Simbolo(text, TablaTipos.getInstance().getString(), fila, columna);
-        return sim;
+        return new SimboloBuilder().lexema(text).token(TablaTipos.getInstance().getString()).fila(fila).columna(columna).build();
     }
 
     public Cuarteto getCuartetoNum(Simbolo sim) {
@@ -228,7 +231,7 @@ public class ManejadorParser {
                 || TablaTipos.getInstance().isBoolean(sim2.getResultado().getToken())) {
             throw new Exception("Concatenacion erronea entre booleano");
         } else {
-            Simbolo simResult = new Simbolo(getResult(), getTipo(sim1.getResultado(), sim2.getResultado()));
+            Simbolo simResult = new SimboloBuilder().lexema(getResult()).token(getTipo(sim1.getResultado(), sim2.getResultado())).build();
             return new CuartetoBuilder().operador(plus).operando1(sim2.getResultado()).
                     operando2(sim1.getResultado()).resultado(simResult).siguiente(setAtLast(sim1, sim2)).build();
         }
@@ -238,7 +241,7 @@ public class ManejadorParser {
         if (isNotTypeNumber(sim1.getResultado().getToken(), sim2.getResultado().getToken())) {
             throw new Exception("Multiplicacion " + SALTO_LN + getInvalidSimbol(sim2.getResultado(), sim1.getResultado(), ERROR_NUM));
         } else {
-            Simbolo simResult = new Simbolo(getResult(), getTipo(sim1.getResultado(), sim2.getResultado()));
+            Simbolo simResult = new SimboloBuilder().lexema(getResult()).token(getTipo(sim1.getResultado(), sim2.getResultado())).build();
             return new CuartetoBuilder().operador(multi).operando1(sim2.getResultado()).
                     operando2(sim1.getResultado()).resultado(simResult).siguiente(setAtLast(sim1, sim2)).build();
         }
@@ -248,7 +251,7 @@ public class ManejadorParser {
         if (isNotTypeNumber(sim1.getResultado().getToken(), sim2.getResultado().getToken())) {
             throw new Exception("Division ( / )" + SALTO_LN + getInvalidSimbol(sim2.getResultado(), sim1.getResultado(), ERROR_NUM));
         } else {
-            Simbolo simResult = new Simbolo(getResult(), getTipo(sim1.getResultado(), sim2.getResultado()));
+            Simbolo simResult = new SimboloBuilder().lexema(getResult()).token(getTipo(sim1.getResultado(), sim2.getResultado())).build();
             return new CuartetoBuilder().operador(division).operando1(sim2.getResultado()).
                     operando2(sim1.getResultado()).resultado(simResult).siguiente(setAtLast(sim1, sim2)).build();
         }
@@ -258,7 +261,7 @@ public class ManejadorParser {
         if (isNotTypeNumber(sim1.getResultado().getToken(), sim2.getResultado().getToken())) {
             throw new Exception("Resta ( - )" + SALTO_LN + getInvalidSimbol(sim2.getResultado(), sim1.getResultado(), ERROR_NUM));
         } else {
-            Simbolo simResult = new Simbolo(getResult(), getTipo(sim1.getResultado(), sim2.getResultado()));
+            Simbolo simResult = new SimboloBuilder().lexema(getResult()).token(getTipo(sim1.getResultado(), sim2.getResultado())).build();
             return new CuartetoBuilder().operador(minus).operando1(sim2.getResultado()).
                     operando2(sim1.getResultado()).resultado(simResult).siguiente(setAtLast(sim1, sim2)).build();
         }
@@ -268,7 +271,7 @@ public class ManejadorParser {
         if (isNotTypeNumber(sim1.getResultado().getToken(), sim2.getResultado().getToken())) {
             throw new Exception("Modulo ( % )" + SALTO_LN + getInvalidSimbol(sim2.getResultado(), sim1.getResultado(), ERROR_NUM));
         } else {
-            Simbolo simResult = new Simbolo(getResult(), getTipo(sim1.getResultado(), sim2.getResultado()));
+            Simbolo simResult = new SimboloBuilder().lexema(getResult()).token(getTipo(sim1.getResultado(), sim2.getResultado())).build();
             return new CuartetoBuilder().operador(module).operando1(sim2.getResultado()).
                     operando2(sim1.getResultado()).resultado(simResult).siguiente(setAtLast(sim1, sim2)).build();
         }
@@ -276,10 +279,10 @@ public class ManejadorParser {
 
     public Cuarteto getRelacion(Cuarteto sim2, String rel, Cuarteto sim1) throws Exception {
         if (!isNotTypeNumber(sim1.getResultado().getToken(), sim2.getResultado().getToken())) {
-            if (sim1.getOperador() == null && sim2.getOperador() == null) {
-                String relacion = sim1.getResultado().getLexema() + rel + sim2.getResultado().getLexema();
+            if (sim1.getOperador() == null || sim2.getOperador() == null) {
+                String relacion = getLastCuarteto(sim2).getResultado().getLexema() + rel + getLastCuarteto(sim1).getResultado().getLexema();
                 Cuarteto rela = new CuartetoBuilder().operador(rel).operando1(sim2.getResultado()).operando2(sim1.getResultado()).
-                        resultado(getSimbolBoolean(relacion)).siguiente(setAtLast(sim1, sim2)).build();
+                        resultado(getSimbolBoolean(relacion)).siguiente(setAtLast(sim2, sim1)).build();
                 return new CuartetoBuilder().operador(rel).operando1(getSimbolString(setEtiquetaResult(getEtiqueta()))).
                         operando2(getSimbolString(getSimpleEtiqueta())).resultado(getSimbolBoolean(getEtiqueta())).restriccion(rela).build();
             } else {
@@ -292,8 +295,13 @@ public class ManejadorParser {
                 }
             }
         } else {
-            throw new Exception("Relacion incopatible de tipos ( " + rel + " )" + SALTO_LN + getInvalidSimbol(sim2.getResultado(), sim1.getResultado(), ERROR_NUM));
+            throw new Exception("Relacion incopatible entre tipos ( " + rel + " )" + SALTO_LN + getInvalidSimbol(sim2.getResultado(), sim1.getResultado(), ERROR_NUM));
         }
+        return null;
+    }
+
+    public Cuarteto getSingleRelacion() {
+
         return null;
     }
 
@@ -346,7 +354,11 @@ public class ManejadorParser {
             }
             setEtiquetaResult(sim3.getOperando2().getLexema());
             sim3.setOperador(or);
-            if (!sim2.getOperador().equals(AND)) {
+            if (sim2.getOperador() != null) {
+                if (!sim2.getOperador().equals(AND)) {
+                    sim2.setOperando2(sim3.getOperando2());
+                }
+            } else {
                 sim2.setOperando2(sim3.getOperando2());
             }
             sim2.setOperando1(sim3.getResultado());
@@ -438,7 +450,8 @@ public class ManejadorParser {
         String info[] = datos.split("-");
         int fila = Integer.parseInt(info[0]);
         int columna = Integer.parseInt(info[1]);
-        return new CuartetoBuilder().operador(var).operando1(new Simbolo(var, null, fila, columna)).componentes(exp).build();
+        return new CuartetoBuilder().operador(var).operando1(new SimboloBuilder().
+                lexema(var).fila(fila).columna(columna).build()).componentes(exp).build();
     }
 
     public Cuarteto getSimpleAsign(String name) {
@@ -462,8 +475,13 @@ public class ManejadorParser {
             if (cuarteto.getComponentes() != null) {
                 if (TablaTipos.getInstance().isCompatible(cuarteto.getComponentes().getResultado().getToken(), tipo)) {
                     tablaSimbolos.setSimbol(cuarteto.getOperador(), tipo);
-                    return new CuartetoBuilder().operador(ASSIGN).componentes(cuarteto.
-                            getComponentes()).operando1(getLastCuarteto(cuarteto.getComponentes()).getResultado()).resultado(new Simbolo(cuarteto.getOperador(), tipo)).build();
+                    String asign = ASSIGN;
+                    if (TablaTipos.getInstance().isBoolean(tipo)) {
+                        asign = ASSIGN_BOOL;
+                    }
+                    return new CuartetoBuilder().operador(asign).componentes(cuarteto.
+                            getComponentes()).operando1(getLastCuarteto(cuarteto.getComponentes()).
+                                    getResultado()).resultado(new SimboloBuilder().lexema(cuarteto.getOperador()).token(tipo).build()).build();
                 } else {
                     cuarteto.getOperando1().setToken(tipo);
                     throw new Exception("Asignacion" + SALTO_LN + getInvalidAsign(cuarteto.getOperando1(),
@@ -483,7 +501,11 @@ public class ManejadorParser {
             Simbolo sim = tablaSimbolos.getSimbol(token);
             Cuarteto last = getLastCuarteto(expresion);
             if (TablaTipos.getInstance().isCompatible(last.getResultado().getToken(), sim.getToken())) {
-                return new CuartetoBuilder().operador(ASSIGN).componentes(expresion).
+                String asign = ASSIGN;
+                if (TablaTipos.getInstance().isBoolean(sim.getToken())) {
+                    asign = ASSIGN_BOOL;
+                }
+                return new CuartetoBuilder().operador(asign).componentes(expresion).
                         operando1(last.getResultado()).resultado(sim).build();
             } else {
                 throw new Exception("Variable " + token + " no es compatible con expresion de tipo " + expresion.getResultado().getToken().getNombre());
@@ -545,6 +567,14 @@ public class ManejadorParser {
         return sim2;
     }
 
+    public void setOperadorAll(Cuarteto head) {
+        Cuarteto sim = head;
+        while (sim != null) {
+            sim.setOperador(CICLO);
+            sim = sim.getSiguiente();
+        }
+    }
+
     public Cuarteto whileOperacion(String whil, Cuarteto restriccion, Cuarteto instructions) throws Exception {
         if (TablaTipos.getInstance().isBoolean(restriccion.getResultado().getToken())) {
             Cuarteto last = getLastCuarteto(restriccion);
@@ -556,32 +586,6 @@ public class ManejadorParser {
         } else {
             throw new Exception("Variable " + restriccion.getResultado().getLexema() + " no es de tipo booleana");
         }
-    }
-
-    public void setOperadorAll(Cuarteto head) {
-        Cuarteto sim = head;
-        while (sim != null) {
-            sim.setOperador(CICLO);
-            sim = sim.getSiguiente();
-        }
-    }
-
-    public Cuarteto whileVariable(String whil, String var, Cuarteto instructions, int fila, int columna) throws Exception {
-        Cuarteto sim = getVariableRel(var, fila, columna);
-        etiquetaResult = getEtiqueta();
-        Cuarteto result = new CuartetoBuilder().operador(whil).operando1(sim.getOperando2()).
-                operando2(sim.getOperando1()).resultado(sim.getResultado()).componentes(instructions).build();
-        setOperadorAll(sim);
-        return setAtLast(sim, result);
-    }
-
-    public Cuarteto whileBool(String whil, Simbolo sim, Cuarteto instructions) {
-        Cuarteto sim1 = getBool(sim);
-        etiquetaResult = getEtiqueta();
-        Cuarteto result = new CuartetoBuilder().operador(whil).operando1(sim1.getOperando2()).
-                operando2(sim1.getOperando1()).resultado(sim1.getResultado()).componentes(instructions).build();
-        setOperadorAll(sim1);
-        return setAtLast(sim1, result);
     }
 
     public Cuarteto doWhileOperacion(String doW, Cuarteto restriccion, Cuarteto instructions) throws Exception {
@@ -596,26 +600,6 @@ public class ManejadorParser {
         } else {
             throw new Exception("Variable " + restriccion.getResultado().getLexema() + " no es de tipo booleana");
         }
-    }
-
-    public Cuarteto doWhileVariable(String doW, String var, Cuarteto instructions, int fila, int columna) throws Exception {
-        Cuarteto sim = getVariableRel(var, fila, columna);
-        etiquetaResult = getEtiqueta();
-        Cuarteto result = new CuartetoBuilder().operador(doW).operando1(sim.getOperando2()).
-                operando2(sim.getOperando1()).resultado(sim.getResultado()).build();
-        setOperadorAll(sim);
-        sim.setComponentes(instructions);
-        return setAtLast(sim, result);
-    }
-
-    public Cuarteto doWhileBool(String doW, Simbolo sim, Cuarteto instructions) {
-        Cuarteto sim1 = getBool(sim);
-        etiquetaResult = getEtiqueta();
-        Cuarteto result = new CuartetoBuilder().operador(doW).operando1(sim1.getOperando2()).
-                operando2(sim1.getOperando1()).resultado(sim1.getResultado()).build();
-        setOperadorAll(sim1);
-        sim1.setComponentes(instructions);
-        return setAtLast(sim1, result);
     }
 
     public Cuarteto getArrayPosition(String var, Cuarteto position) {
@@ -646,7 +630,7 @@ public class ManejadorParser {
             Cuarteto last = getLastCuarteto(opBol);
             Cuarteto instruccion = null;
             Cuarteto num = getCuartetoNum(getSimbolEntero(entero, fila, columna));
-            Simbolo simResult = new Simbolo(getResult(), getTipo(num.getResultado(), num.getResultado()));
+            Simbolo simResult = new SimboloBuilder().lexema(getResult()).token(getTipo(num.getResultado(), num.getResultado())).build();
             if (signo.equals(PLUS)) {
                 instruccion = new CuartetoBuilder().operador(PLUS).operando1(asignacion.getResultado()).operando2(num.getResultado()).resultado(simResult).build();
             } else if (signo.equals(MINUS)) {
@@ -662,47 +646,6 @@ public class ManejadorParser {
         } else {
             throw new Exception();
         }
-    }
-
-    public Cuarteto forVariable(Cuarteto asignacion, String var, String signo, String entero, Cuarteto instructions,
-            int fila1, int columna1, int fila2, int columna2) throws Exception {
-        Cuarteto sim = getVariableRel(var, fila1, columna1);
-        Cuarteto instruccion = null;
-        Cuarteto num = getCuartetoNum(getSimbolEntero(entero, fila2, columna2));
-        Simbolo simResult = new Simbolo(getResult(), getTipo(num.getResultado(), num.getResultado()));
-        if (signo.equals(PLUS)) {
-            instruccion = new CuartetoBuilder().operador(PLUS).operando1(asignacion.getResultado()).operando2(num.getResultado()).resultado(simResult).build();
-        } else if (signo.equals(MINUS)) {
-            instruccion = new CuartetoBuilder().operador(MINUS).operando1(asignacion.getResultado()).operando2(num.getResultado()).resultado(simResult).build();
-        }
-        Cuarteto asign = asignByToken(asignacion.getResultado().getLexema(), instruccion);
-        etiquetaResult = getEtiqueta();
-        Cuarteto result = new CuartetoBuilder().operador(FOR).operando1(sim.getOperando2()).
-                operando2(sim.getOperando1()).resultado(sim.getResultado()).componentes(instructions).
-                auxiliar(asignacion).restriccion(asign).build();
-        setOperadorAll(sim);
-        setAtLast(sim, result);
-        return setAtLast(asignacion, sim);
-    }
-
-    public Cuarteto forBool(Cuarteto asignacion, Simbolo bool, String signo, String entero, Cuarteto instructions, int fila, int columna) throws Exception {
-        Cuarteto sim = getBool(bool);
-        Cuarteto instruccion = null;
-        Cuarteto num = getCuartetoNum(getSimbolEntero(entero, fila, columna));
-        Simbolo simResult = new Simbolo(getResult(), getTipo(num.getResultado(), num.getResultado()));
-        if (signo.equals(PLUS)) {
-            instruccion = new CuartetoBuilder().operador(PLUS).operando1(asignacion.getResultado()).operando2(num.getResultado()).resultado(simResult).build();
-        } else if (signo.equals(MINUS)) {
-            instruccion = new CuartetoBuilder().operador(MINUS).operando1(asignacion.getResultado()).operando2(num.getResultado()).resultado(simResult).build();
-        }
-        Cuarteto asign = asignByToken(asignacion.getResultado().getLexema(), instruccion);
-        etiquetaResult = getEtiqueta();
-        Cuarteto result = new CuartetoBuilder().operador(FOR).operando1(sim.getOperando2()).
-                operando2(sim.getOperando1()).resultado(sim.getResultado()).componentes(instructions).
-                auxiliar(asignacion).restriccion(asign).build();
-        setOperadorAll(sim);
-        setAtLast(sim, result);
-        return setAtLast(asignacion, sim);
     }
 
     public Cuarteto getInstructions(Cuarteto e1, Cuarteto e2) {
@@ -766,6 +709,9 @@ public class ManejadorParser {
                 case ASSIGN:
                     printAsign(cuarteto);
                     break;
+                case ASSIGN_BOOL:
+                    printAsignBool(cuarteto);
+                    break;
                 case WHILE:
                     printWhile(cuarteto);
                     break;
@@ -812,7 +758,7 @@ public class ManejadorParser {
     }
 
     private void printVarBool(Cuarteto sim) {
-        print(getIf(sim.getResultado().getLexema() + SIGN_EQUAL + TRUE));
+        print(getIf(sim.getResultado().getLexema() + EQUAL + TRUE));
     }
 
     private void printBool(Cuarteto sim) {
@@ -829,30 +775,31 @@ public class ManejadorParser {
     }
 
     private void printRel(Cuarteto sim) {
-        print(getIf(sim.getOperando1().getLexema() + sim.getOperador() + sim.getOperando2().getLexema()));
+        print(sim.getSiguiente());
+        print(getIf(sim.getResultado().getLexema()));
     }
 
     private void printPrint(Cuarteto sim) {
         if (TablaTipos.getInstance().isBoolean(sim.getResultado().getToken())) {
             if (sim.getResultado().getLexema().equals(TRUE_VAL)) {
-                println(PRINT + " " + TRUE);
+                println(PRINT + SPACE + TRUE);
             } else if (sim.getResultado().getLexema().equals(FALSE_VAL)) {
-                println(PRINT + " " + FALSE);
+                println(PRINT + SPACE + FALSE);
             }
         } else {
-            println(PRINT + " " + sim.getResultado().getLexema());
+            println(PRINT + SPACE + sim.getResultado().getLexema());
         }
     }
 
     private void printPrintln(Cuarteto sim) {
         if (TablaTipos.getInstance().isBoolean(sim.getResultado().getToken())) {
             if (sim.getResultado().getLexema().equals(TRUE_VAL)) {
-                println(PRINTLN + " " + TRUE);
+                println(PRINTLN + SPACE + TRUE);
             } else if (sim.getResultado().getLexema().equals(FALSE_VAL)) {
-                println(PRINTLN + " " + FALSE);
+                println(PRINTLN + SPACE + FALSE);
             }
         } else {
-            println(PRINTLN + " " + sim.getResultado().getLexema());
+            println(PRINTLN + SPACE + sim.getResultado().getLexema());
         }
     }
 
@@ -867,9 +814,17 @@ public class ManejadorParser {
     }
 
     private void printAsign(Cuarteto sim) {
-        Cuarteto last = getLastCuarteto(sim);
         print(sim.getComponentes());
         println(sim.getResultado().getLexema() + SIGN_EQUAL + sim.getOperando1().getLexema());
+    }
+
+    private void printAsignBool(Cuarteto sim) {
+        print(sim.getComponentes());
+        if (isTrue(sim.getOperando1())) {
+            println(sim.getResultado().getLexema() + SIGN_EQUAL + TRUE);
+        } else {
+            println(sim.getResultado().getLexema() + SIGN_EQUAL + FALSE);
+        }
     }
 
     private void printWhile(Cuarteto sim) {

@@ -78,6 +78,11 @@ Ident = [A-Za-z_$] [A-Za-z_$0-9]*
 	"FOR" {return symbol(FOR, yytext());}
 	"PRINT" {return symbol(PRINT, yytext());}
 	"PRINTLN" {return symbol(PRINTLN, yytext());}
+	"SCANS" {return symbol(SCANS, yytext());}
+	"SCANN" {return symbol(SCANN, yytext());}
+	"MAIN" {return symbol(MAIN, yytext());}
+	"return" {return symbol(RETURN, yytext());}
+	"%%%" {return symbol(SEPARATOR, yytext());}
 	"," {return symbol(COMMA, yytext());}
 	":" {return symbol(COLON, yytext());}
 	"(" {return symbol(OPEN_BRK, yytext());}

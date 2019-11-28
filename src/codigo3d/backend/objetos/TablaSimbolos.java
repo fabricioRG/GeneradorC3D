@@ -15,7 +15,7 @@ public class TablaSimbolos {
     }
     
     public void setSimbol(String lexema, Tipo token){
-        Simbolo simbolo = new Simbolo(lexema, token);
+        Simbolo simbolo = new SimboloBuilder().lexema(lexema).token(token).build();
         simbolos.put(simbolo.getLexema(), simbolo);
     }
     

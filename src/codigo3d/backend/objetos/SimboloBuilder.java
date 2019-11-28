@@ -4,9 +4,9 @@ import java.util.LinkedList;
 
 /**
  * 
- * @author fabricioRG
+ * 
  */
-public class Simbolo {
+public class SimboloBuilder {
 
     private String lexema;
     private Tipo token;
@@ -17,47 +17,67 @@ public class Simbolo {
     private int fila;
     private int columna;
 
-    Simbolo(SimboloBuilder builder) {
-        this.lexema = builder.getLexema();
-        this.token = builder.getToken();
-        this.categoria = builder.getCategoria();
-        this.parametros = builder.getParametros();
-        this.noParametros = builder.getNoParametros();
-        this.ambito = builder.getAmbito();
-        this.fila = builder.getFila();
-        this.columna = builder.getColumna();
+    public SimboloBuilder() {
+    }
+    
+    public SimboloBuilder lexema(String lexema){
+        this.lexema = lexema;
+        return this;
+    }
+    
+    public SimboloBuilder token(Tipo token){
+        this.token = token;
+        return this;
+    }
+    
+    public SimboloBuilder categoria(String categoria){
+        this.categoria = categoria;
+        return this;
+    }
+    
+    public SimboloBuilder parametros(LinkedList <Tipo> parametros){
+        this.parametros = parametros;
+        return this;
+    }
+    
+    public SimboloBuilder noParametros(int noParametros){
+        this.noParametros = noParametros;
+        return this;
+    }
+    
+    public SimboloBuilder ambito(int ambito){
+        this.ambito = ambito;
+        return this;
+    }
+    
+    public SimboloBuilder fila(int fila){
+        this.fila = fila;
+        return this;
+    }
+    
+    public SimboloBuilder columna(int columna){
+        this.columna = columna;
+        return this;
+    }
+    
+    public Simbolo build(){
+        return new Simbolo(this);
     }
 
     public String getLexema() {
         return lexema;
     }
 
-    public void setLexema(String lexema) {
-        this.lexema = lexema;
-    }
-
     public Tipo getToken() {
         return token;
-    }
-
-    public void setToken(Tipo token) {
-        this.token = token;
     }
 
     public int getFila() {
         return fila;
     }
 
-    public void setFila(int fila) {
-        this.fila = fila;
-    }
-
     public int getColumna() {
         return columna;
-    }
-
-    public void setColumna(int columna) {
-        this.columna = columna;
     }
 
     public String getCategoria() {
@@ -87,8 +107,5 @@ public class Simbolo {
     public LinkedList<Tipo> getParametros() {
         return parametros;
     }
-
-    public void setParametros(LinkedList<Tipo> parametros) {
-        this.parametros = parametros;
-    }
+    
 }
