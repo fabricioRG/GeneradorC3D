@@ -40,6 +40,7 @@ public class sym {
   public static final int TRUE = 13;
   public static final int error = 1;
   public static final int HIGHER = 40;
+  public static final int VOID = 53;
   public static final int BYTE = 4;
   public static final int MODULE = 36;
   public static final int COLON = 25;
@@ -114,7 +115,8 @@ public class sym {
   "SCANN",
   "MAIN",
   "RETURN",
-  "SEPARATOR"
+  "SEPARATOR",
+  "VOID"
   };
 }
 

@@ -3,6 +3,7 @@ package codigo3d.backend.manejadores;
 import codigo3d.frontend.AreaTexto;
 import codigo3d.backend.analizadores.Lexer1;
 import codigo3d.backend.analizadores.parser;
+import codigo3d.backend.analizadores.parser2;
 import java.io.StringReader;
 
 /**
@@ -25,6 +26,21 @@ public class ManejadorAreaTexto {
 
     public void runText(String entrada) {
         ManejadorParser mp = new ManejadorParser(this);
+        //Primer analisis - reconocimiento de variables, subprogramas y parametros
+        if (!entrada.trim().isEmpty()) {
+            StringReader sr = new StringReader(entrada);
+            Lexer1 lexer = new Lexer1(sr);
+            lexer.setManejadorParser(mp);
+            parser2 pars = new parser2(lexer, mp);
+            try {
+                pars.parse();
+            } catch (Exception e) {
+                e.printStackTrace();
+                printError(e.getMessage());
+            }
+        }
+        //Segundo analisis - generacion de cuartetos
+        /*
         if (!entrada.trim().isEmpty()) {
             StringReader sr = new StringReader(entrada);
             Lexer1 lexer = new Lexer1(sr);
@@ -36,7 +52,7 @@ public class ManejadorAreaTexto {
                 e.printStackTrace();
                 printError(e.getMessage());
             }
-        }
+        }*/
     }
 
     //Metodo que devuelve la columna actual del cursor

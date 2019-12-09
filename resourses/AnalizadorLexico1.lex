@@ -82,6 +82,7 @@ Ident = [A-Za-z_$] [A-Za-z_$0-9]*
 	"SCANN" {return symbol(SCANN, yytext());}
 	"MAIN" {return symbol(MAIN, yytext());}
 	"return" {return symbol(RETURN, yytext());}
+	"void" {return symbol (VOID, yytext());}
 	"%%%" {return symbol(SEPARATOR, yytext());}
 	"," {return symbol(COMMA, yytext());}
 	":" {return symbol(COLON, yytext());}
