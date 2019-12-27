@@ -353,7 +353,7 @@ public class Lexer1 implements java_cup.runtime.Scanner {
   }
 
   private void error(String message)throws Exception {
-    mp.printError("Lexico °° "+ message +" Linea: "+(yyline+1)+", Columna: "+(yycolumn+1));
+    mp.printError("Lexico "+ "\n" + message + "\n" + "Linea: "+(yyline+1)+ "\n" + "Columna: "+(yycolumn+1));
   }
 
   public void setManejadorParser(ManejadorParser mp){

@@ -16,7 +16,18 @@ parser code {:
 	}
 
         public void syntax_error(Symbol s) {
-            mp.printSintaxError("¡Error de sintaxis! -> "+ s.value +" Linea "+(s.left)+" columna "+(s.right) + "\n");
+        	System.out.println("Error");
+            mp.printSintaxError(s);
+        }
+
+        public void report_error(String message, Object info){
+        	System.out.println(message);
+        	//System.out.println("Error");
+        }
+
+        public void report_fatal_error (String message, Object info){
+        	System.out.println("Fatal Error");
+        	mp.printSintaxError("No se ha encontrado ninguna estructura valida");
         }
 :}
 
@@ -29,14 +40,13 @@ terminal String 		DIVISION, MODULE, LOWER_EQ, HIGHER_EQ, LOWER, HIGHER;
 terminal String 		NOT_EQUAL, EQUAL, TEXT, NUM_INTEGER, NUM_DOUBLE, NUM_FLOAT, VARIABLE;
 terminal String 		SCANS, SCANN, MAIN, RETURN, SEPARATOR, VOID;
 
-non terminal String 	main;
 non terminal Cuarteto 	instruction, decl, instructions, block;
 non terminal Cuarteto 	programInstruction, programInstructionA, programInstructionB, mainInstruction, globalInstruction;
 non terminal Cuarteto 	bodyInstruction, bodyInstructionA, bodySubprogram, instructionB;
-non terminal String 	assign1, assign3;
-non terminal Cuarteto 	assign, assign2, formalAssign, decl1, decls, declns, declns1;
+non terminal String 	assign1;
+non terminal Cuarteto 	assign, assign2, assign3, formalAssign, decl1, decls, declns, declns1;
 non terminal Cuarteto 	arrayAssign, arrayPosition;
-non terminal Cuarteto 	array, assignA;
+non terminal Cuarteto 	array, assignA, arrayDim1, arrayDim;
 non terminal Cuarteto 	if, if1, ifA, elseifA, elseifAA, elseA, ifB, elseifB, elseifBB, elseB;
 non terminal Cuarteto 	while, whileA;
 non terminal String 	signo;
@@ -71,20 +81,18 @@ start with globalInstruction;
 
 /* INICIO GRAMATICA DE -----3DIRECCIONES----- */
 
-main ::= 				instructions:e 
-						| block:e 
-						;
-
-block ::= 				OPEN_SQR instructions:e CLOSE_SQR 
-						| OPEN_SQR CLOSE_SQR 
-						;
-
 globalInstruction ::= 	bodyInstruction SEPARATOR mainInstruction
+						| SEPARATOR mainInstruction
 						| mainInstruction
-						| error:e {:System.out.println("No se ha encontrado el main");:}
+						//| error:e {:mp.printSintaxError("No se ha encontrado ninguna estructura valida");:} //SEMICOLON
 						;
 
-mainInstruction ::= 	MAIN OPEN_BRK CLOSE_BRK {::} block
+mainInstruction ::= 	MAIN:e1 OPEN_BRK CLOSE_BRK {:mp.setMainDecl(e1);mp.setGlobal(false);:} block {:mp.setGlobal(true);:}
+						| error:e {:mp.printSintaxError("Estructura de MAIN no valida o faltante");:} CLOSE_BRK
+						;
+
+block ::= 				OPEN_SQR instructions CLOSE_SQR 
+						| OPEN_SQR CLOSE_SQR 
 						;
 
 bodyInstruction ::= 	bodyInstruction bodyInstructionA
@@ -101,8 +109,8 @@ subprogram ::= 			tipo:e1
 						bodySubprogram:e4 {:mp.setGlobal(true);:}
 						;
 
-programInstruction ::= 	programInstruction:e1 programInstructionA:e2 
-						| programInstructionA:e
+programInstruction ::= 	programInstruction programInstructionA
+						| programInstructionA
 						;
 
 programInstructionA ::= rtrn 
@@ -119,49 +127,53 @@ programInstructionB ::=	formalAssign:e {:RESULT = e;:}
 						| println:e {:RESULT = e;:}
 						| scans:e {::}
 						| scann:e {::}
-						| error:e SEMICOLON
+						| error:e {:mp.printSintaxError("Instruccion no conocida en cuerpo de programa: ");:} SEMICOLON //BOOLEAN VARIABLE SEMICOLON
 						;
 
-subprogramCall ::= 		VARIABLE paramsA SEMICOLON
+subprogramCall ::= 		VARIABLE paramsA
 						;
 
 paramsA ::= 			OPEN_BRK CLOSE_BRK
 						| OPEN_BRK paramsProgram CLOSE_BRK
 						;
 
-paramsProgram ::= 		paramsProgram COMMA VARIABLE
-						| VARIABLE
+paramsProgram ::= 		paramsProgram COMMA opNum
+						| opNum
+						| error:e {:mp.printSintaxError("Parametros no validos para llamada de subprograma");:} opNum //VARIABLE
 						;
 
 rtrn ::=				RETURN opNum SEMICOLON
 						;
 
-parametrosA ::= 		OPEN_BRK CLOSE_BRK 
-						| OPEN_BRK parametros:e CLOSE_BRK {:RESULT = e;:}
+parametrosA ::= 		OPEN_BRK CLOSE_BRK
+						| OPEN_BRK parametros CLOSE_BRK
+						| error:e {:mp.printSintaxError("Parametros no validos para declaracion de subprograma");:} CLOSE_BRK //OPEN_BRK CLOSE_BRK 
 						;
 
-parametros ::= 			parametros:e1 COMMA parametro:e2 {::}
-						| parametro:e {:RESULT = e;:}
+parametros ::= 			parametros COMMA parametro
+						| parametro
 						;
 
-parametro ::= 			tipo:e1 VARIABLE:e2 {:mp.setParametroDecl(e1, e2, e2left, e2right);System.out.println(e2);:}
+parametro ::= 			tipo:e1 VARIABLE:e2 {:mp.setParametroDecl(e1, e2, e2left, e2right);:}
+						| error:e {:mp.printSintaxError("Error parametro");:} VARIABLE //STRING VARIABLE
 						;
 
 bodySubprogram ::= 		OPEN_SQR declns SEPARATOR programInstruction CLOSE_SQR
 						| OPEN_SQR declns CLOSE_SQR
 						| OPEN_SQR programInstruction CLOSE_SQR
 						| OPEN_SQR CLOSE_SQR
+						| error:e {:mp.printSintaxError("Error bodySubprogram");:} CLOSE_SQR //OPEN_SQR CLOSE_SQR
 						;
 
-declns ::= 				declns:e1 declns1:e2
-						| declns1:e 
+declns ::= 				declns declns1
+						| declns1
 						;
 
-declns1 ::=				decl:e 
-						| array:e 
+declns1 ::=				decl
+						| array
 						;
 
-instructions ::= 		instructions:e1 instruction:e2 
+instructions ::= 		instructions instruction
 						| instruction:e {:RESULT = e;:}
 						;
 
@@ -183,7 +195,7 @@ instruction ::=  		decl:e {:RESULT = e;:}
 						| println:e {:RESULT = e;:}
 						| scans:e {::}
 						| scann:e {::}
-						| error:e SEMICOLON
+						| error:e {:mp.printSintaxError("Instruccion no conocida");:} SEMICOLON
 						;
 
 decl ::= 				tipo:e1 decls:e2 SEMICOLON {:mp.setVariableDecl(e2,e1);:}
@@ -197,23 +209,36 @@ decl1 ::= 				assign2:e {:RESULT = e;:}
 						| VARIABLE:e {:RESULT = mp.getSimpleAsign(e, eleft, eright);:}
 						;
 
-assign2 ::= 			assign3:e1 exp:e2 {:RESULT = mp.getAsign(e1, e2);:}
+assign2 ::= 			assign3:e1 exp:e2 {:RESULT = e1;:}
+						| error:e {:mp.printSintaxError("Error de asignacion");:} exp //VARIABLE ASSIGN VARIABLE
 						;
 
-assign3 ::= 			VARIABLE:e ASSIGN:e2 {:RESULT = e + "[" + eleft + "-" + eright + "]";:}
+assign3 ::= 			VARIABLE:e1 ASSIGN:e2 {:RESULT = mp.getSimpleAsign(e1, e1left, e1right);:}
+						| error:e {:mp.printSintaxError("Error de asignacion variable");:} ASSIGN //VARIABLE ASSIGN
 						;
 
-array ::= 				ARRAY tipo:e1 OPEN_SQR opNum:e2 CLOSE_SQR assignA:e3 SEMICOLON {:RESULT = mp.setArray(e3, e1);:}
+arrayDim ::= 			arrayDim:e1 arrayDim1:e2 {:RESULT = mp.getDimensions(e1, e2);:}
+						| arrayDim1:e {:RESULT = e;:}
 						;
 
-assignA ::= 			assignA:e1 COMMA VARIABLE:e2
-						| VARIABLE:e 
+arrayDim1 ::= 			OPEN_SQR opNum:e CLOSE_SQR {:RESULT = mp.getDimension(e, eleft, eright);:}
+						| error:e {:mp.printSintaxError("Error de array dimension");:} CLOSE_SQR //OPEN_SQR NUM_INTEGER CLOSE_SQR
 						;
 
-arrayAssign ::= 		arrayPosition:e1 ASSIGN exp:e2 SEMICOLON 
+array ::= 				ARRAY tipo:e1 arrayDim:e2 assignA:e3 SEMICOLON {:RESULT = mp.setArrayDecl(e1, e2, e3);:}
+						//| error:e {:mp.printSintaxError("Error de array definicion");:} //ARRAY INT OPEN_SQR NUM_INTEGER CLOSE_SQR VARIABLE SEMICOLON
 						;
 
-arrayPosition ::= 		VARIABLE:e1 OPEN_SQR opNum:e2 CLOSE_SQR {: RESULT = mp.getArrayPosition(e1,e2);:}
+assignA ::= 			assignA:e1 COMMA VARIABLE:e2 {:RESULT = mp.getArrayAsign(e1, e2);:}
+						| VARIABLE:e {:RESULT = mp.getSimpleArrayAsign(e);:}
+						| error:e {:mp.printSintaxError("Error de asignacion 01");:} VARIABLE
+						;
+
+arrayAssign ::= 		arrayPosition:e1 ASSIGN exp:e2 SEMICOLON
+						;
+
+arrayPosition ::= 		VARIABLE:e1 arrayDim {::}
+						| error:e {:mp.printSintaxError("Error array posicion");:} CLOSE_SQR //VARIABLE OPEN_SQR NUM_INTEGER CLOSE_SQR
 						;
 
 if ::= 					IF OPEN_BRK if1 CLOSE_BRK ifA {::}
@@ -321,6 +346,7 @@ assign1 ::= 			VARIABLE:e ASSIGN {:RESULT = e;:}
 						;
 
 exp ::= 				opNum:e {:RESULT = e;:}
+						//| error {::} //VARIABLE
 						;
 
 opNum ::= 				e:e {:RESULT = mp.orderOpNum(e);:}
@@ -362,6 +388,7 @@ opRel ::= 				r:e {:RESULT = e;:}
 						;
 
 r ::= 					expRel:e1 rel:e2 expRel:e3 {:RESULT = mp.getRelacion(e1, e2, e3);:}
+						| error:e {:mp.printSintaxError("Error de expresion relacional");:} //VARIABLE LOWER VARIABLE
 						;
 
 rel ::= 				HIGHER:e {:RESULT = e;:}

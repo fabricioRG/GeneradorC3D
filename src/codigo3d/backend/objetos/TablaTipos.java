@@ -134,6 +134,10 @@ public class TablaTipos {
         return isByte(token) || isChar(token) || isInt(token) || isLong(token) || isFloat(token)
                 || isDouble(token);
     }
+    
+    public boolean isIntegerNumber(Tipo token){
+        return isByte(token) || isChar(token) || isInt(token) || isLong(token);
+    }
 
     public boolean isCompatible(Tipo token1, Tipo token2) {
         if (isNumber(token1) && isNumber(token2)) {

@@ -16,7 +16,7 @@ parser code {:
 	}
 
         public void syntax_error(Symbol s) {
-            mp.printSintaxError("¡Error de sintaxis! -> "+ s.value +" Linea "+(s.left)+" columna "+(s.right) + "\n");
+            //mp.printSintaxError("¡Error de sintaxis! -> "+ s.value +" Linea "+(s.left)+" columna "+(s.right) + "\n");
         }
 :}
 
@@ -32,11 +32,11 @@ terminal String 		SCANS, SCANN, MAIN, RETURN, SEPARATOR, VOID;
 non terminal String 	main;
 non terminal Cuarteto 	instruction, decl, instructions, block;
 non terminal Cuarteto 	programInstruction, programInstructionA, programInstructionB, mainInstruction, globalInstruction;
-non terminal Cuarteto 	bodyInstruction, bodyInstructionA, bodySubprogram;
+non terminal Cuarteto 	bodyInstruction, bodyInstructionA, bodySubprogram, instructionB;
 non terminal String 	assign1, assign3;
 non terminal Cuarteto 	assign, assign2, formalAssign, decl1, decls, declns, declns1;
 non terminal Cuarteto 	arrayAssign, arrayPosition;
-non terminal Cuarteto 	array, assignA;
+non terminal Cuarteto 	array, assignA, arrayDim, arrayDim1;
 non terminal Cuarteto 	if, if1, ifA, elseifA, elseifAA, elseA, ifB, elseifB, elseifBB, elseB;
 non terminal Cuarteto 	while, whileA;
 non terminal String 	signo;
@@ -80,11 +80,12 @@ block ::= 				OPEN_SQR instructions:e CLOSE_SQR {:RESULT = e;:}
 						;
 
 globalInstruction ::= 	bodyInstruction SEPARATOR mainInstruction
+						| SEPARATOR mainInstruction
 						| mainInstruction
 						| error:e {:System.out.println("No se ha encontrado el main");:}
 						;
 
-mainInstruction ::= 	MAIN OPEN_BRK CLOSE_BRK block
+mainInstruction ::= 	MAIN:e1 OPEN_BRK CLOSE_BRK {:mp.setSubprogramaActual(e1);mp.setGlobal(false);:} block {:mp.setGlobal(true);:}
 						;
 
 bodyInstruction ::= 	bodyInstruction bodyInstructionA
@@ -92,13 +93,13 @@ bodyInstruction ::= 	bodyInstruction bodyInstructionA
 						;
 
 bodyInstructionA ::=	subprogram
-						| instruction
+						| instructionB
 						;
 
-subprogram ::= 			tipo VARIABLE
-						parametrosA
-						bodySubprogram
-						{::}
+subprogram ::= 			tipo:e1 
+						VARIABLE:e2 {:mp.setSubprogramaActual(e2); mp.setGlobal(false);:}
+						parametrosA:e3
+						bodySubprogram:e4 {:mp.setGlobal(true);:}
 						;
 
 programInstruction ::= 	programInstruction:e1 programInstructionA:e2 
@@ -129,8 +130,8 @@ paramsA ::= 			OPEN_BRK CLOSE_BRK
 						| OPEN_BRK paramsProgram CLOSE_BRK
 						;
 
-paramsProgram ::= 		paramsProgram COMMA VARIABLE
-						| VARIABLE
+paramsProgram ::= 		paramsProgram COMMA opNum
+						| opNum
 						;
 
 rtrn ::=				RETURN opNum SEMICOLON
@@ -165,6 +166,12 @@ instructions ::= 		instructions:e1 instruction:e2 {:RESULT = mp.getInstructions(
 						| instruction:e {:RESULT = e;:}
 						;
 
+instructionB ::= 		decl: e {:RESULT = e;:}
+						| formalAssign
+						| arrayAssign
+						| array
+						;
+
 instruction ::=  		decl:e {:RESULT = e;:}
 						| formalAssign:e {:RESULT = e;:}
 						| arrayAssign:e {:RESULT = e;:}
@@ -180,34 +187,41 @@ instruction ::=  		decl:e {:RESULT = e;:}
 						| error:e SEMICOLON
 						;
 
-decl ::= 				tipo:e1 decls:e2 SEMICOLON {:RESULT = mp.setAsign(e2,e1);:}
+decl ::= 				tipo:e1 decls:e2 SEMICOLON {::}
 						;
 
-decls ::= 				decls:e1 COMMA decl1:e2 {:RESULT = mp.getDecls(e1, e2);:}
-						| decl1:e  {:RESULT = e;:}
+decls ::= 				decls:e1 COMMA decl1:e2 {::}
+						| decl1:e  {::}
 						;
 
-decl1 ::= 				assign2:e {:RESULT = e;:}
-						| VARIABLE:e {:RESULT = mp.getSimpleAsign(e, eleft, eright);:}
+decl1 ::= 				assign2:e {::}
+						| VARIABLE:e {::}
 						;
 
-assign2 ::= 			assign3:e1 exp:e2 {:RESULT = mp.getAsign(e1, e2);:}
+assign2 ::= 			assign3:e1 exp:e2 {::}
 						;
 
-assign3 ::= 			VARIABLE:e ASSIGN:e2 {:RESULT = e + "[" + eleft + "-" + eright + "]";:}
+assign3 ::= 			VARIABLE:e ASSIGN:e2 {::}
 						;
 
-array ::= 				ARRAY tipo:e1 OPEN_SQR opNum:e2 CLOSE_SQR assignA:e3 SEMICOLON {:RESULT = mp.setArray(e3, e1);:}
+arrayDim ::= 			arrayDim:e1 arrayDim1:e2 {::}
+						| arrayDim1:e {::}
 						;
 
-assignA ::= 			assignA:e1 COMMA VARIABLE:e2 {:RESULT = mp.getArrayAsign(e1, e2);:}
-						| VARIABLE:e {:RESULT = mp.getSimpleArrayAsign(e);:}
+arrayDim1 ::= 			OPEN_SQR opNum:e CLOSE_SQR {::}
+						;
+
+array ::= 				ARRAY tipo:e1 arrayDim:e2 assignA:e3 SEMICOLON {::}
+						;
+
+assignA ::= 			assignA:e1 COMMA VARIABLE:e2 {::}
+						| VARIABLE:e {::}
 						;
 
 arrayAssign ::= 		arrayPosition:e1 ASSIGN exp:e2 SEMICOLON {:RESULT = mp.setArrayAsign(e1,e2);:}
 						;
 
-arrayPosition ::= 		VARIABLE:e1 OPEN_SQR opNum:e2 CLOSE_SQR {: RESULT = mp.getArrayPosition(e1,e2);:}
+arrayPosition ::= 		VARIABLE:e1 arrayDim {::}
 						;
 
 if ::= 					IF OPEN_BRK if1 CLOSE_BRK ifA {::}

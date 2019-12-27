@@ -26,6 +26,7 @@ public class ManejadorAreaTexto {
 
     public void runText(String entrada) {
         ManejadorParser mp = new ManejadorParser(this);
+        at.getNavegador().setText("");
         //Primer analisis - reconocimiento de variables, subprogramas y parametros
         if (!entrada.trim().isEmpty()) {
             StringReader sr = new StringReader(entrada);
@@ -40,8 +41,7 @@ public class ManejadorAreaTexto {
             }
         }
         //Segundo analisis - generacion de cuartetos
-        /*
-        if (!entrada.trim().isEmpty()) {
+        /*if (!entrada.trim().isEmpty()) {
             StringReader sr = new StringReader(entrada);
             Lexer1 lexer = new Lexer1(sr);
             lexer.setManejadorParser(mp);
@@ -90,13 +90,20 @@ public class ManejadorAreaTexto {
         return contador;
     }
 
-    
-    public void printTerminal(String text){
+    public void printTerminal(String text) {
         at.getNavegador().setText(at.getNavegador().getText() + text);
     }
 
-    public void printError(String error){
+    public void printError(String error) {
         at.getNavegador().setText(ERROR_MESSAGE + "Tipo de error: " + error);
     }
+
+    public void printSemanticError(String error){
+        at.getNavegador().setText(at.getNavegador().getText() + ERROR_MESSAGE + "Tipo de error: " + error + SALTO_LINEA + "Imposible de recuperar");
+    }
     
+    public void printSintaxError(String error) {
+        printTerminal(ERROR_MESSAGE + "Tipo de error: " + error);
+    }
+
 }

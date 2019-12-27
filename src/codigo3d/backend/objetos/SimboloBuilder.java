@@ -12,7 +12,9 @@ public class SimboloBuilder {
     private Tipo token;
     private String categoria;
     private LinkedList <Tipo> parametros;
+    private LinkedList<String> dimesiones;
     private int noParametros;
+    private int noDimensiones;
     private int ambito;
     private int fila;
     private int columna;
@@ -57,6 +59,16 @@ public class SimboloBuilder {
     
     public SimboloBuilder columna(int columna){
         this.columna = columna;
+        return this;
+    }
+    
+    public SimboloBuilder dimensiones(LinkedList<String> dimensiones){
+        this.dimesiones = dimensiones;
+        return this;
+    }
+    
+    public SimboloBuilder noDimensiones(int noDimensiones){
+        this.noDimensiones = noDimensiones;
         return this;
     }
     
@@ -106,6 +118,14 @@ public class SimboloBuilder {
 
     public LinkedList<Tipo> getParametros() {
         return parametros;
+    }
+
+    public LinkedList<String> getDimesiones() {
+        return dimesiones;
+    }
+
+    public int getNoDimensiones() {
+        return noDimensiones;
     }
     
 }

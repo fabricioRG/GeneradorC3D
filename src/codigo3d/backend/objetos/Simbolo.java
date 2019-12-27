@@ -12,7 +12,9 @@ public class Simbolo {
     private Tipo token;
     private String categoria;
     private LinkedList <Tipo> parametros;
+    private LinkedList <String> dimensiones;
     private int noParametros;
+    private int noDimensiones;
     private int ambito;
     private int fila;
     private int columna;
@@ -22,7 +24,9 @@ public class Simbolo {
         this.token = builder.getToken();
         this.categoria = builder.getCategoria();
         this.parametros = builder.getParametros();
+        this.dimensiones = builder.getDimesiones();
         this.noParametros = builder.getNoParametros();
+        this.noDimensiones = builder.getNoDimensiones();
         this.ambito = builder.getAmbito();
         this.fila = builder.getFila();
         this.columna = builder.getColumna();
@@ -90,5 +94,21 @@ public class Simbolo {
 
     public void setParametros(LinkedList<Tipo> parametros) {
         this.parametros = parametros;
+    }
+
+    public LinkedList<String> getDimensiones() {
+        return dimensiones;
+    }
+
+    public void setDimensiones(LinkedList<String> dimensiones) {
+        this.dimensiones = dimensiones;
+    }
+
+    public int getNoDimensiones() {
+        return noDimensiones;
+    }
+
+    public void setNoDimensiones(int noDimensiones) {
+        this.noDimensiones = noDimensiones;
     }
 }

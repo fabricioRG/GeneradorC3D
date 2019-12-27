@@ -9,13 +9,6 @@ import java.util.LinkedList;
  */
 public class TablaSimbolos {
 
-    public final static String SUBPROGRAMA = "subprograma";
-    public final static String VARIABLE = "variable";
-    public final static String PARAMETRO = "parametro";
-    public final static String GLOBAL_VAR = "$";
-    public final static int AMBITO_GLOBAL = 0;
-    public final static int AMBITO_LOCAL = 1;
-
     private HashMap<String, Simbolo> simbolos = null;
 
     public TablaSimbolos() {
@@ -35,6 +28,14 @@ public class TablaSimbolos {
         return simbolos.get(simbol);
     }
 
+    public Simbolo getLocalVariable(String var, String subprograma){
+        return getSimbol(getLocalName(var, subprograma));
+    }
+    
+    public Simbolo getGlobalVariable(String var){
+        return getSimbol(getGlobalName(var));
+    }
+    
     public boolean isSubprogram(String categoria) {
         return categoria.equals(SUBPROGRAMA);
     }
@@ -47,27 +48,55 @@ public class TablaSimbolos {
         return categoria.equals(PARAMETRO);
     }
 
+    public boolean isArreglo(String categoria){
+        return categoria.equals(ARREGLO);
+    }
+    
     public boolean existSubprogram(String simbol) {
         if (existSimbol(simbol)) {
             return isSubprogram(getSimbol(simbol).getCategoria());
         }
         return false;
     }
-    
-    public boolean existGlobalVariable(String var){
-        String variable = GLOBAL_VAR + var;
-        if(existSimbol(variable)){
+
+    public boolean existGlobalVariable(String var) {
+        String variable = getGlobalName(var);
+        if (existSimbol(variable)) {
             return isVariable(getSimbol(variable).getCategoria());
         }
         return false;
     }
 
-    public boolean existLocalVariableOrParametro(String var, String subprograma){
-        String nombreVar = var + subprograma;
-        if(existSimbol(nombreVar)){
+    public boolean existLocalVariableOrParametro(String var, String subprograma) {
+        String nombreVar = getLocalName(var, subprograma);
+        if (existSimbol(nombreVar)) {
             return isVariable(getSimbol(nombreVar).getCategoria()) || isParametro(getSimbol(nombreVar).getCategoria());
         }
         return false;
+    }
+    
+    public boolean existLocalArray(String var, String subprograma){
+        String nombreVar = getLocalName(var, subprograma);
+        if (existSimbol(nombreVar)) {
+            return isArreglo(getSimbol(nombreVar).getCategoria());
+        }
+        return false;
+    }
+
+    public boolean existGlobalArray(String var){
+        String variable = getGlobalName(var);
+        if (existSimbol(variable)) {
+            return isArreglo(getSimbol(variable).getCategoria());
+        }
+        return false;
+    }
+    
+    public boolean existLocalVariableParametroOrArray(String var, String subprograma){
+        return existLocalVariableOrParametro(var, subprograma) || existLocalArray(var, subprograma);
+    }
+    
+    public boolean existGlobalVariableOrArray(String var){
+        return existGlobalVariable(var) || existGlobalArray(var);
     }
     
     public void setSubprogram(Tipo tipo, String simbol) {
@@ -75,32 +104,61 @@ public class TablaSimbolos {
                 ambito(AMBITO_LOCAL).token(tipo).parametros(new LinkedList<>()).build();
         simbolos.put(simbolo.getLexema(), simbolo);
     }
-    
+
     public void setLocalVariable(Tipo tipo, String var, String subprograma) {
-        String nombreVar = var + subprograma;
+        String nombreVar = getLocalName(var, subprograma);
         Simbolo simbolo = new SimboloBuilder().token(tipo).lexema(nombreVar).categoria(VARIABLE).
                 ambito(AMBITO_LOCAL).build();
         simbolos.put(simbolo.getLexema(), simbolo);
     }
 
+    public void setLocalArray(Tipo tipo, String var, LinkedList<String> dimension, String subprograma) {
+        String nombreVar = getLocalName(var, subprograma);
+        Simbolo simbolo = new SimboloBuilder().token(tipo).lexema(nombreVar).categoria(ARREGLO).
+                ambito(AMBITO_LOCAL).noDimensiones(dimension.size()).dimensiones(dimension).build();
+        simbolos.put(simbolo.getLexema(), simbolo);
+    }
+    
     public void setParametro(Tipo tipo, String var, String subprograma) {
-        String nombreVar = var + subprograma;
+        String nombreVar = getLocalName(var, subprograma);
         Simbolo simbolo = new SimboloBuilder().token(tipo).lexema(nombreVar).categoria(PARAMETRO).
                 ambito(AMBITO_LOCAL).build();
         simbolos.put(simbolo.getLexema(), simbolo);
     }
 
     public void setGlobalVariable(Tipo tipo, String var) {
-        String nombreVar = GLOBAL_VAR + var;
+        String nombreVar = getGlobalName(var);
         Simbolo simbolo = new SimboloBuilder().token(tipo).lexema(nombreVar).categoria(VARIABLE).
                 ambito(AMBITO_GLOBAL).build();
         simbolos.put(simbolo.getLexema(), simbolo);
     }
     
-    public void addSubprogramParametro(Tipo tipo, String name){
+    public void setGlobalArray(Tipo tipo, String var, LinkedList<String> dimension) {
+        String nombreVar = getGlobalName(var);
+        Simbolo simbolo = new SimboloBuilder().token(tipo).lexema(nombreVar).categoria(ARREGLO).
+                ambito(AMBITO_GLOBAL).noDimensiones(dimension.size()).dimensiones(dimension).build();
+        simbolos.put(simbolo.getLexema(), simbolo);
+    }
+
+    public void addSubprogramParametro(Tipo tipo, String name) {
         Simbolo subprogram = getSimbol(name);
         subprogram.getParametros().add(tipo);
         subprogram.setNoParametros(subprogram.getParametros().size());
     }
+    
+    private String getLocalName(String var, String subprograma){
+        return var + subprograma;
+    }
+    
+    private String getGlobalName(String var){
+        return GLOBAL_VAR + var;
+    }
 
+    public final static int AMBITO_LOCAL = 1;
+    public final static int AMBITO_GLOBAL = 0;
+    public final static String SUBPROGRAMA = "subprograma";
+    public final static String VARIABLE = "variable";
+    public final static String PARAMETRO = "parametro";
+    public final static String ARREGLO = "arreglo";
+    public final static String GLOBAL_VAR = "$";
 }
