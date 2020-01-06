@@ -12,12 +12,14 @@ public class SimboloBuilder {
     private Tipo token;
     private String categoria;
     private LinkedList <Tipo> parametros;
-    private LinkedList<String> dimesiones;
+    private LinkedList<Cuarteto> dimesiones;
+    private LinkedList<Cuarteto> estructura;
     private int noParametros;
     private int noDimensiones;
     private int ambito;
     private int fila;
     private int columna;
+    private boolean valorRetorno;
 
     public SimboloBuilder() {
     }
@@ -62,13 +64,23 @@ public class SimboloBuilder {
         return this;
     }
     
-    public SimboloBuilder dimensiones(LinkedList<String> dimensiones){
+    public SimboloBuilder dimensiones(LinkedList<Cuarteto> dimensiones){
         this.dimesiones = dimensiones;
         return this;
     }
     
     public SimboloBuilder noDimensiones(int noDimensiones){
         this.noDimensiones = noDimensiones;
+        return this;
+    }
+    
+    public SimboloBuilder estructura(LinkedList<Cuarteto> estructura){
+        this.estructura = estructura;
+        return this;
+    }
+    
+    public SimboloBuilder valorRetorno(boolean valorRetorno){
+        this.valorRetorno = valorRetorno;
         return this;
     }
     
@@ -96,36 +108,32 @@ public class SimboloBuilder {
         return categoria;
     }
 
-    public void setCategoria(String categoria) {
-        this.categoria = categoria;
-    }
-
     public int getNoParametros() {
         return noParametros;
-    }
-
-    public void setNoParametros(int noParametros) {
-        this.noParametros = noParametros;
     }
 
     public int getAmbito() {
         return ambito;
     }
 
-    public void setAmbito(int ambito) {
-        this.ambito = ambito;
-    }
-
     public LinkedList<Tipo> getParametros() {
         return parametros;
     }
 
-    public LinkedList<String> getDimesiones() {
+    public LinkedList<Cuarteto> getDimesiones() {
         return dimesiones;
     }
 
     public int getNoDimensiones() {
         return noDimensiones;
+    }
+
+    public LinkedList<Cuarteto> getEstructura() {
+        return estructura;
+    }
+
+    public boolean isValorRetorno() {
+        return valorRetorno;
     }
     
 }

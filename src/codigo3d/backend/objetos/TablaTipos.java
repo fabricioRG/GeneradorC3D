@@ -134,13 +134,15 @@ public class TablaTipos {
         return isByte(token) || isChar(token) || isInt(token) || isLong(token) || isFloat(token)
                 || isDouble(token);
     }
-    
-    public boolean isIntegerNumber(Tipo token){
+
+    public boolean isIntegerNumber(Tipo token) {
         return isByte(token) || isChar(token) || isInt(token) || isLong(token);
     }
 
     public boolean isCompatible(Tipo token1, Tipo token2) {
-        if (isNumber(token1) && isNumber(token2)) {
+        if (isBoolean(token1) || isBoolean(token2)) {
+            return isBoolean(token1) && isBoolean(token2);
+        } else if (isNumber(token1) && isNumber(token2)) {
             return token1.getPosicion() <= token2.getPosicion();
         } else {
             return isString(token1) && isString(token2);

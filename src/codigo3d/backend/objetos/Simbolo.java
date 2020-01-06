@@ -12,12 +12,14 @@ public class Simbolo {
     private Tipo token;
     private String categoria;
     private LinkedList <Tipo> parametros;
-    private LinkedList <String> dimensiones;
+    private LinkedList <Cuarteto> dimensiones;
+    private LinkedList <Cuarteto> estructura;
     private int noParametros;
     private int noDimensiones;
     private int ambito;
     private int fila;
     private int columna;
+    private boolean valorRetorno;
 
     Simbolo(SimboloBuilder builder) {
         this.lexema = builder.getLexema();
@@ -30,6 +32,8 @@ public class Simbolo {
         this.ambito = builder.getAmbito();
         this.fila = builder.getFila();
         this.columna = builder.getColumna();
+        this.estructura = builder.getEstructura();
+        this.valorRetorno = builder.isValorRetorno();
     }
 
     public String getLexema() {
@@ -96,11 +100,11 @@ public class Simbolo {
         this.parametros = parametros;
     }
 
-    public LinkedList<String> getDimensiones() {
+    public LinkedList<Cuarteto> getDimensiones() {
         return dimensiones;
     }
 
-    public void setDimensiones(LinkedList<String> dimensiones) {
+    public void setDimensiones(LinkedList<Cuarteto> dimensiones) {
         this.dimensiones = dimensiones;
     }
 
@@ -110,5 +114,21 @@ public class Simbolo {
 
     public void setNoDimensiones(int noDimensiones) {
         this.noDimensiones = noDimensiones;
+    }
+
+    public LinkedList<Cuarteto> getEstructura() {
+        return estructura;
+    }
+
+    public void setEstructura(LinkedList<Cuarteto> estructura) {
+        this.estructura = estructura;
+    }
+
+    public boolean isValorRetorno() {
+        return valorRetorno;
+    }
+
+    public void setValorRetorno(boolean valorRetorno) {
+        this.valorRetorno = valorRetorno;
     }
 }

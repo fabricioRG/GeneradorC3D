@@ -6,9 +6,11 @@
 package codigo3d.backend.manejadores;
 
 import codigo3d.backend.objetos.*;
+import codigo3d.backend.parseractions.*;
 import java.util.LinkedList;
 import java.util.Stack;
 import java_cup.runtime.Symbol;
+import org.jdesktop.el.impl.parser.Token;
 
 /**
  *
@@ -16,18 +18,21 @@ import java_cup.runtime.Symbol;
  */
 public class ManejadorParser {
 
-    private ManejadorAreaTexto manejadorAreaTexto = null;
-    private TablaSimbolos tablaSimbolos = null;
-
     public ManejadorParser(ManejadorAreaTexto mi) {
         this.manejadorAreaTexto = mi;
         this.tablaSimbolos = new TablaSimbolos();
         setEtiquetaResult(getSimpleEtiqueta());
+        /*this.declarador = new DeclaradorValores(this);
+        this.asignador = new AsignadorValores(this);
+        this.retornador = new RetornadorValores(this);
+        this.operador = new ProcesadorNumerico(this);
+        this.procesadorFunciones = new ProcesadorFunciones(this);*/
+        //this.acciones = new AccionParser();
     }
 
     // --------------------ANALIZADOR NO 1------------------------ //
     public void setSubprogramDecl(Tipo tipo, String var, int fila, int columna) throws Exception {
-        if (!tablaSimbolos.existSubprogram(var)) {
+        if (!existSubprogram(var)) {
             tablaSimbolos.setSubprogram(tipo, var);
             subprogramaActual = var;
         } else {
@@ -44,7 +49,7 @@ public class ManejadorParser {
 
     public void setParametroDecl(Tipo tipo, String name, int fila, int columna) throws Exception {
         if (!TablaTipos.getInstance().isVoid(tipo)) {
-            if (!tablaSimbolos.existLocalVariableOrParametro(name, subprogramaActual)) {
+            if (!existLocalVariableOrParametro(name)) {
                 tablaSimbolos.setParametro(tipo, name, subprogramaActual);
                 tablaSimbolos.addSubprogramParametro(tipo, subprogramaActual);
             } else {
@@ -68,41 +73,41 @@ public class ManejadorParser {
 
     public void asignDecl(Cuarteto cuarteto, Tipo tipo) throws Exception {
         if (!TablaTipos.getInstance().isVoid(tipo)) {
-            if (!global) {
-                if (!tablaSimbolos.existLocalVariableParametroOrArray(cuarteto.getOperador(), subprogramaActual)) {
+            if (!isGlobal()) {
+                if (!existLocalVariableParametroOrArray(cuarteto.getOperador())) {
                     if (cuarteto.getComponentes() != null) {
                         if (TablaTipos.getInstance().isCompatible(cuarteto.getComponentes().getResultado().getToken(), tipo)) {
-                            tablaSimbolos.setLocalVariable(tipo, cuarteto.getOperador(), subprogramaActual);
+                            getTablaSimbolos().setLocalVariable(tipo, cuarteto.getOperador(), getSubprogramaActual());
                         } else {
                             cuarteto.getOperando1().setToken(tipo);
-                            throw new Exception("Asignacion" + SALTO_LN + getInvalidAsign(cuarteto.getOperando1(),
+                            throw new Exception("Asignacion" + ManejadorParser.SALTO_LN + getInvalidAsign(cuarteto.getOperando1(),
                                     cuarteto.getComponentes().getResultado().getToken()));
                         }
                     } else {
-                        tablaSimbolos.setLocalVariable(tipo, cuarteto.getOperador(), subprogramaActual);
+                        getTablaSimbolos().setLocalVariable(tipo, cuarteto.getOperador(), getSubprogramaActual());
                     }
                 } else {
                     cuarteto.getOperando1().setToken(tipo);
-                    throw new Exception("Declaracion de variable local" + SALTO_LN + getValorInfo(cuarteto.getOperando1())
-                            + "Variable, Parametro o Arreglo ya declarado en subprograma: " + subprogramaActual);
+                    throw new Exception("Declaracion de variable local" + ManejadorParser.SALTO_LN + getValorInfo(cuarteto.getOperando1())
+                            + "Variable, Parametro o Arreglo ya declarado en subprograma: " + getSubprogramaActual());
                 }
             } else {
-                if (!tablaSimbolos.existGlobalVariableOrArray(cuarteto.getOperador())) {
-                    tablaSimbolos.setGlobalVariable(tipo, cuarteto.getOperador());
+                if (!existGlobalVariableOrArray(cuarteto.getOperador())) {
+                    getTablaSimbolos().setGlobalVariable(tipo, cuarteto.getOperador());
                 } else {
                     cuarteto.getOperando1().setToken(tipo);
-                    throw new Exception("Declaracion de variable global" + SALTO_LN + getValorInfo(cuarteto.getOperando1())
+                    throw new Exception("Declaracion de variable global" + ManejadorParser.SALTO_LN + getValorInfo(cuarteto.getOperando1())
                             + "Variable o Arreglo global ya declarado");
                 }
             }
         } else {
-            throw new Exception("Declaracion de Variable" + SALTO_LN + getInvalidAsignVoid(cuarteto.getOperando1()));
+            throw new Exception("Declaracion de Variable" + ManejadorParser.SALTO_LN + getInvalidAsignVoid(cuarteto.getOperando1()));
         }
     }
 
-    public void setSimpleArrayDecl(Tipo tipo, LinkedList<String> dimension, Cuarteto sim) throws Exception {
+    public void setSimpleArrayDecl(Tipo tipo, LinkedList<Cuarteto> dimension, Cuarteto sim) throws Exception {
         if (!global) {
-            if (!tablaSimbolos.existLocalVariableOrParametro(sim.getResultado().getLexema(), subprogramaActual)) {
+            if (!existLocalVariableOrParametro(sim.getResultado().getLexema())) {
                 tablaSimbolos.setLocalArray(tipo, sim.getResultado().getLexema(), dimension, subprogramaActual);
             } else {
                 sim.getResultado().setToken(tipo);
@@ -110,7 +115,7 @@ public class ManejadorParser {
                         + "Variable, Parametro o Arreglo ya declarada en subprograma: " + subprogramaActual);
             }
         } else {
-            if (!tablaSimbolos.existGlobalVariable(sim.getResultado().getLexema())) {
+            if (!existGlobalVariable(sim.getResultado().getLexema())) {
                 tablaSimbolos.setGlobalArray(tipo, sim.getResultado().getLexema(), dimension);
             } else {
                 sim.getResultado().setToken(tipo);
@@ -120,23 +125,12 @@ public class ManejadorParser {
         }
     }
 
-    private LinkedList<String> getList(Cuarteto list) {
-        LinkedList<String> lista = new LinkedList<>();
-        Cuarteto i = list;
-        while (i != null) {
-            lista.add(i.getResultado().getLexema());
-            i = i.getSiguiente();
-        }
-        return lista;
-    }
-
-    public Cuarteto setArrayDecl(Tipo tipo, Cuarteto dimension, Cuarteto actual) throws Exception {
-        LinkedList<String> list = getList(dimension);
+    public Cuarteto setArrayDecl(Tipo tipo, LinkedList<Cuarteto> dimension, Cuarteto actual) throws Exception {
         Cuarteto i = actual;
         Cuarteto j = i;
         while (i != null) {
             j = i;
-            setSimpleArrayDecl(tipo, list, i);
+            setSimpleArrayDecl(tipo, dimension, i);
             i = i.getSiguiente();
         }
         return j;
@@ -240,12 +234,24 @@ public class ManejadorParser {
         return new CuartetoBuilder().resultado(getSimbolString(text, fila, columna)).build();
     }
 
-    private String getValorInfo(Simbolo sim) {
-        return "Lexema: " + sim.getLexema() + SALTO_LN + "Token: " + sim.getToken().getNombre() + SALTO_LN
-                + "Fila: " + sim.getFila() + SALTO_LN + "Columna: " + sim.getColumna() + SALTO_LN;
+    public String getValorInfo(Simbolo sim) {
+        String info = "";
+        if (sim.getLexema() != null) {
+            info = "Lexema: " + sim.getLexema() + SALTO_LN;
+        }
+        if (sim.getToken() != null) {
+            info = info + "Token: " + sim.getToken().getNombre() + SALTO_LN;
+        }
+        if (sim.getFila() > 0) {
+            info = info + "Fila: " + sim.getFila() + SALTO_LN;
+        }
+        if (sim.getColumna() > 0) {
+            info = info + "Columna: " + sim.getColumna() + SALTO_LN;
+        }
+        return info;
     }
 
-    private String getInvalidSimbol(Simbolo sim1, Simbolo sim2, int error) {
+    public String getInvalidSimbol(Simbolo sim1, Simbolo sim2, int error) {
         switch (error) {
             case ERROR_NUM:
                 if (TablaTipos.getInstance().isNumber(sim1.getToken())) {
@@ -271,13 +277,13 @@ public class ManejadorParser {
         return null;
     }
 
-    private String getInvalidAsign(Simbolo sim1, Tipo tipo) {
+    public String getInvalidAsign(Simbolo sim1, Tipo tipo) {
         return "==Variable para asignacion==" + SALTO_LN + getValorInfo(sim1) + "===Valor de asignacion==="
                 + SALTO_LN + "Asignacion incopatible (tipo): " + tipo.getNombre() + SALTO_LN + SALTO_LN + sim1.getToken().getNombre()
                 + " incopatible con " + tipo.getNombre();
     }
 
-    private String getInvalidAsignVoid(Simbolo sim) {
+    public String getInvalidAsignVoid(Simbolo sim) {
         sim.setToken(TablaTipos.getInstance().getVoid());
         return getValorInfo(sim) + "Asignacion de tipo \"void\" no posible para variables y parametros";
     }
@@ -291,19 +297,20 @@ public class ManejadorParser {
                 || TablaTipos.getInstance().isBoolean(token1) || TablaTipos.getInstance().isBoolean(token2);
     }
 
-    public Cuarteto getDimension(Cuarteto expresion, int fila, int columna) throws Exception {
+    public LinkedList<Cuarteto> getDimension(Cuarteto expresion, int fila, int columna) throws Exception {
         Cuarteto last = getLastCuarteto(expresion);
         if (TablaTipos.getInstance().isIntegerNumber(last.getResultado().getToken())) {
-            return getCuartetoString(last.getResultado().getLexema(), fila, columna);
+            LinkedList<Cuarteto> resultado = new LinkedList<>();
+            resultado.add(expresion);
+            return resultado;
         } else {
-            throw new Exception("Valor de dimension" + SALTO_LN + "token: " + last.getResultado().getToken().getNombre()
-                    + SALTO_LN + "Fila: " + fila + SALTO_LN + "Columna: " + columna + SALTO_LN + "Valor de dimension requerido: Entero");
+            throw new Exception("Declaracion de ARRAY" + getValorInfo(
+                    new SimboloBuilder().token(last.getResultado().getToken()).fila(fila).columna(columna).build()) + "Valor de dimension requerido: int (entero)");
         }
     }
 
-    public Cuarteto getDimensions(Cuarteto sim1, Cuarteto sim2) {
-        Cuarteto last = getLastCuarteto(sim1);
-        last.setSiguiente(sim2);
+    public LinkedList<Cuarteto> getDimensions(LinkedList<Cuarteto> sim1, LinkedList<Cuarteto> sim2) {
+        sim1.add(sim2.getFirst());
         return sim1;
     }
 
@@ -417,7 +424,27 @@ public class ManejadorParser {
     }
 
     public Cuarteto getVariableRel(String key, int fila, int columna) throws Exception {
-        if (tablaSimbolos.existSimbol(key)) {
+        Simbolo sim = null;
+        if (!global && existLocalVariableOrParametro(key)) {
+            sim = tablaSimbolos.getLocalVariable(key, subprogramaActual);
+        } else if (existGlobalVariable(key)) {
+            sim = tablaSimbolos.getGlobalVariable(key);
+        } else {
+            throw new Exception("Variable sin declarar" + SALTO_LN
+                    + getValorInfo(new SimboloBuilder().lexema(key).fila(fila).columna(columna).build())
+                    + "Variable local o global no ha sido declarada");
+        }
+        if (TablaTipos.getInstance().isBoolean(sim.getToken())) {
+            return new CuartetoBuilder().operador(VAR_BOOL).operando1(getSimbolString(setEtiquetaResult(getEtiqueta()))).
+                    operando2(getSimbolString(getSimpleEtiqueta())).resultado(getSimbolBoolean(getEtiqueta())).
+                    restriccion(new CuartetoBuilder().resultado(sim).build()).build();
+        } else {
+            throw new Exception("Operacion relacional" + SALTO_LN
+                    + getValorInfo(new SimboloBuilder().lexema(key).fila(fila).columna(columna).build())
+                    + "Token necesario: boolean (booleano)");
+        }
+
+        /*if (existSimbol(key)) {
             Cuarteto var = getVariable(key, fila, columna);
             var.setOperador(VAR_BOOL);
             if (TablaTipos.getInstance().isBoolean(var.getResultado().getToken())) {
@@ -428,7 +455,7 @@ public class ManejadorParser {
             }
         } else {
             throw new Exception("Variable " + key + " no ha sido declarada");
-        }
+        }*/
     }
 
     public Cuarteto getArrayPositionRel(Cuarteto arrayPosition) {
@@ -537,6 +564,117 @@ public class ManejadorParser {
         return anterior;
     }
 
+    public Cuarteto getComponentes(Cuarteto sim1, Cuarteto sim2) {
+        Cuarteto last = getLastCuarteto(sim1);
+        last.setSiguiente(new CuartetoBuilder().componentes(sim2).build());
+        return last;
+    }
+
+    public Cuarteto getComponente(Cuarteto sim) {
+        return new CuartetoBuilder().componentes(sim).build();
+    }
+
+    public Cuarteto getPosition(Cuarteto sim, int fila, int columna) throws Exception {
+        Cuarteto last = getLastCuarteto(sim);
+        if (!TablaTipos.getInstance().isIntegerNumber(last.getResultado().getToken())) {
+            throw new Exception("Posicion de Arreglo" + SALTO_LN
+                    + getValorInfo(new SimboloBuilder().token(last.getResultado().getToken()).fila(fila).columna(columna).build())
+                    + "Token esperado: Entero");
+        }
+        return new CuartetoBuilder().componentes(sim).build();
+    }
+
+    public Cuarteto getArrayPosition(String var, Cuarteto dimension, int fila, int columna) throws Exception {
+        Simbolo sim = null;
+        if (!global && existLocalArray(var)) {
+            sim = tablaSimbolos.getLocalArray(var, subprogramaActual);
+        } else if (existGlobalArray(var)) {
+            sim = tablaSimbolos.getGlobalArray(var);
+        } else {
+            throw new Exception("Posicion de Arreglo" + SALTO_LN
+                    + getValorInfo(new SimboloBuilder().lexema(var).fila(fila).columna(columna).build())
+                    + "Arreglo local o global no declarado");
+        }
+        LinkedList<Cuarteto> lista = getCuartetoList(dimension);
+        if (lista.size() == sim.getDimensiones().size()) {
+            return new CuartetoBuilder().operador(ARRAY).componentes(dimension).resultado(sim).build();
+        } else {
+            throw new Exception("Numero de dimensiones en posicion de arreglo" + SALTO_LN
+                    + getValorInfo(new SimboloBuilder().lexema(var).fila(fila).columna(columna).build())
+                    + "Dimension(es) necesaria(s): " + sim.getDimensiones().size());
+        }
+    }
+
+    public void addSubprogramInstruction(Cuarteto instruction) {
+        tablaSimbolos.addSubprogramEstructura(instruction, subprogramaActual);
+    }
+
+    public void setSubprogramReturn(boolean valorReturn) {
+        tablaSimbolos.setSubprogramBooleanValorReturn(valorReturn, subprogramaActual);
+    }
+
+    public void verificateSubprogram() throws Exception {
+        Simbolo sim = tablaSimbolos.getSubprogram(subprogramaActual);
+        if (!TablaTipos.getInstance().isBoolean(sim.getToken()) && !sim.isValorRetorno()) {
+            throw new Exception("Return en subprograma" + SALTO_LN + "Subprograma \"" + subprogramaActual + "\" sin valor de retorno");
+        }
+    }
+
+    public Cuarteto getReturn(Cuarteto expresion, int fila, int columna) throws Exception {
+        Cuarteto last = getLastCuarteto(expresion);
+        Simbolo sim = tablaSimbolos.getSubprogram(subprogramaActual);
+        if (!TablaTipos.getInstance().isVoid(sim.getToken())) {
+            if (TablaTipos.getInstance().isCompatible(last.getResultado().getToken(), sim.getToken())) {
+                return new CuartetoBuilder().operador(RETURN).resultado(last.getResultado()).componentes(expresion).build();
+            } else {
+                throw new Exception("Return en subprograma" + SALTO_LN + getInvalidAsign(sim, last.getResultado().getToken()));
+            }
+        } else {
+            throw new Exception("Return en subprograma" + SALTO_LN
+                    + getValorInfo(new SimboloBuilder().token(sim.getToken()).fila(fila).columna(columna).build())
+                    + "Subprograma de tipo \"void\" no puede devolver ningun valor");
+        }
+    }
+
+    public Cuarteto getSubprogramCall(String var, Cuarteto params, int fila, int columna) throws Exception {
+        if (existSubprogram(var)) {
+            Simbolo subprograma = tablaSimbolos.getSubprogram(var);
+            compareSubprogramParams(subprograma.getParametros(), params, fila, columna, subprogramaActual);
+            return new CuartetoBuilder().operador(SUBPROGRAM_CALL).resultado(subprograma).componentes(params).build();
+        } else {
+            throw new Exception("Llamada de subprograma" + SALTO_LN
+                    + getValorInfo(new SimboloBuilder().lexema(var).fila(fila).columna(columna).build())
+                    + "Subprograma no existente");
+        }
+    }
+
+    public void compareSubprogramParams(LinkedList<Tipo> params, Cuarteto callParams, int fila, int columna, String subprogram) throws Exception {
+        LinkedList<Cuarteto> list = getCuartetoList(callParams);
+        if (list.size() == params.size()) {
+            for (int i = 0; i < params.size(); i++) {
+                Cuarteto last = getLastCuarteto(list.get(i).getComponentes());
+                if (!TablaTipos.getInstance().isCompatible(last.getResultado().getToken(), params.get(i))) {
+                    throw new Exception("Parametro en llamada de subprograma" + SALTO_LN + getValorInfo(
+                            new SimboloBuilder().token(last.getResultado().getToken()).fila(fila).columna(columna).build()) + "Token esperado: " + params.get(i));
+                }
+            }
+        } else {
+            throw new Exception("Llamada de subprograma" + SALTO_LN
+                    + getValorInfo(new SimboloBuilder().lexema(subprogram).fila(fila).columna(columna).build())
+                    + "El numero de parametros no coincide" + SALTO_LN + "No. parametros necesarios: " + params.size() + SALTO_LN);
+        }
+    }
+
+    public LinkedList<Cuarteto> getCuartetoList(Cuarteto head) {
+        LinkedList<Cuarteto> list = new LinkedList<>();
+        Cuarteto i = head;
+        while (i != null) {
+            list.add(i);
+            i = i.getSiguiente();
+        }
+        return list;
+    }
+
     public Cuarteto getDecls(Cuarteto anterior, Cuarteto actual) {
         Cuarteto i = anterior;
         Cuarteto j = i.getSiguiente();
@@ -575,7 +713,7 @@ public class ManejadorParser {
     }
 
     private Cuarteto asign(Cuarteto cuarteto, Tipo tipo) throws Exception {
-        if (!tablaSimbolos.existSimbol(cuarteto.getOperador())) {
+        if (!existSimbol(cuarteto.getOperador())) {
             if (cuarteto.getComponentes() != null) {
                 if (TablaTipos.getInstance().isCompatible(cuarteto.getComponentes().getResultado().getToken(), tipo)) {
                     tablaSimbolos.setSimbol(cuarteto.getOperador(), tipo);
@@ -600,10 +738,31 @@ public class ManejadorParser {
         }
     }
 
-    public Cuarteto asignByToken(String token, Cuarteto expresion) throws Exception {
-        if (tablaSimbolos.existSimbol(token)) {
-            Simbolo sim = tablaSimbolos.getSimbol(token);
-            Cuarteto last = getLastCuarteto(expresion);
+    public Cuarteto asignByToken(String token, Cuarteto expresion, int fila, int columna) throws Exception {
+        Simbolo sim = null;
+        if (!global && existLocalVariableOrParametro(token)) {
+            sim = tablaSimbolos.getLocalVariable(token, subprogramaActual);
+        } else if (existGlobalVariable(token)) {
+            sim = tablaSimbolos.getGlobalVariable(token);
+        } else {
+            throw new Exception("Asignacion de valor en variable" + SALTO_LN
+                    + getValorInfo(new SimboloBuilder().lexema(token).fila(fila).columna(columna).build())
+                    + "Variable local o global no declarada");
+        }
+        Cuarteto last = getLastCuarteto(expresion);
+        if (TablaTipos.getInstance().isCompatible(last.getResultado().getToken(), sim.getToken())) {
+            String asign = ASSIGN;
+            if (TablaTipos.getInstance().isBoolean(sim.getToken())) {
+                asign = ASSIGN_BOOL;
+            }
+            return new CuartetoBuilder().operador(asign).componentes(expresion).
+                    operando1(last.getResultado()).resultado(sim).build();
+        } else {
+            throw new Exception("Asignacion de valor en variable" + SALTO_LN + getInvalidAsign(sim, last.getResultado().getToken()));
+        }
+        /*if (existSimbol(token)) {
+            sim = tablaSimbolos.getSimbol(token);
+            last = getLastCuarteto(expresion);
             if (TablaTipos.getInstance().isCompatible(last.getResultado().getToken(), sim.getToken())) {
                 String asign = ASSIGN;
                 if (TablaTipos.getInstance().isBoolean(sim.getToken())) {
@@ -616,7 +775,7 @@ public class ManejadorParser {
             }
         } else {
             throw new Exception("Variable <" + token + "> no existente o no declarada");
-        }
+        }*/
     }
 
     public Cuarteto getSimpleArrayAsign(String text) {
@@ -636,15 +795,12 @@ public class ManejadorParser {
     }
 
     public Cuarteto getVariable(String var, int fila, int columna) throws Exception {
-        if (!global) {
-            if (tablaSimbolos.existLocalVariableOrParametro(var, subprogramaActual)) {
-                Simbolo sim = tablaSimbolos.getLocalVariable(var, subprogramaActual);
-                sim.setFila(fila);
-                sim.setColumna(columna);
-                return new CuartetoBuilder().resultado(sim).build();
-            }
-        }
-        if (tablaSimbolos.existGlobalVariable(var)) {
+        if (!global && existLocalVariableOrParametro(var)) {
+            Simbolo sim = tablaSimbolos.getLocalVariable(var, subprogramaActual);
+            sim.setFila(fila);
+            sim.setColumna(columna);
+            return new CuartetoBuilder().resultado(sim).build();
+        } else if (existGlobalVariable(var)) {
             Simbolo sim = tablaSimbolos.getGlobalVariable(var);
             sim.setFila(fila);
             sim.setColumna(columna);
@@ -699,26 +855,15 @@ public class ManejadorParser {
         }
     }
 
-    public Cuarteto getArrayPosition(String var, Cuarteto position) {
-        if (tablaSimbolos.existSimbol(var)) {
-            Simbolo sim = tablaSimbolos.getSimbol(var);
-            return new CuartetoBuilder().operador(ARRAY).resultado(sim).componentes(position).build();
-        }
-        return null;
-    }
-
     public Cuarteto setArrayAsign(Cuarteto arrayPosition, Cuarteto expresion) throws Exception {
-        if (TablaTipos.getInstance().isCompatible(arrayPosition.getResultado().getToken(), expresion.getResultado().getToken())) {
-            if (TablaTipos.getInstance().isCompatible(expresion.getResultado().getToken(), arrayPosition.getResultado().getToken())) {
-                Cuarteto last = getLastCuarteto(arrayPosition);
-                Cuarteto last2 = getLastCuarteto(expresion);
-                return new CuartetoBuilder().operador(ARRAY_ASIGN).resultado(last2.getResultado()).
-                        operando1(last.getResultado()).componentes(expresion).auxiliar(arrayPosition).build();
-            } else {
-                throw new Exception("Variable " + arrayPosition.getResultado().getLexema() + " no es compatible");
-            }
+        Cuarteto lastCuarteto = getLastCuarteto(expresion);
+        if (TablaTipos.getInstance().isCompatible(lastCuarteto.getResultado().getToken(), arrayPosition.getResultado().getToken())) {
+            Cuarteto last = getLastCuarteto(arrayPosition);
+            Cuarteto last2 = getLastCuarteto(expresion);
+            return new CuartetoBuilder().operador(ARRAY_ASIGN).resultado(last2.getResultado()).
+                    operando1(last.getResultado()).componentes(expresion).auxiliar(arrayPosition).build();
         } else {
-            throw new Exception("No es compatible");
+            throw new Exception("Variable " + arrayPosition.getResultado().getLexema() + " no es compatible");
         }
     }
 
@@ -733,7 +878,7 @@ public class ManejadorParser {
             } else if (signo.equals(MINUS)) {
                 instruccion = new CuartetoBuilder().operador(MINUS).operando1(asignacion.getResultado()).operando2(num.getResultado()).resultado(simResult).build();
             }
-            Cuarteto asign = asignByToken(asignacion.getResultado().getLexema(), instruccion);
+            Cuarteto asign = asignByToken(asignacion.getResultado().getLexema(), instruccion, fila, columna);
             etiquetaResult = getEtiqueta();
             Cuarteto result = new CuartetoBuilder().operador(FOR).operando1(last.getOperando2()).
                     operando2(opBol.getOperando1()).resultado(last.getResultado()).componentes(instructions).restriccion(asign).build();
@@ -746,7 +891,24 @@ public class ManejadorParser {
     }
 
     public Cuarteto getInstructions(Cuarteto e1, Cuarteto e2) {
-        return setAtLast(e1, e2);
+        if (e1 != null && e2 != null) {
+            return setAtLast(e1, e2);
+        } else if (e1 != null) {
+            return e1;
+        } else if (e2 != null) {
+            return e2;
+        } else {
+            return null;
+        }
+    }
+    
+    public void print(Cuarteto bodyInstruction, Cuarteto mainInstruction){
+        if(bodyInstruction != null){
+            
+        }
+        if(mainInstruction != null){
+            
+        }
     }
 
     public boolean isOperadorRelacional(String rel) {
@@ -808,6 +970,15 @@ public class ManejadorParser {
                     break;
                 case ASSIGN_BOOL:
                     printAsignBool(cuarteto);
+                    break;
+                case SUBPROGRAM:
+                    
+                    break;
+                case SUBPROGRAM_CALL:
+                    
+                    break;
+                case RETURN:
+                    
                     break;
                 case WHILE:
                     printWhile(cuarteto);
@@ -963,21 +1134,57 @@ public class ManejadorParser {
         throw new Exception(error);
     }
 
-    public void printInAreaTexto(String error){
+    public void printInAreaTexto(String error) {
         manejadorAreaTexto.printTerminal(error);
     }
-    
-    public void printSintaxError(Symbol sim)  {
-        if(sim.value != null){
-            errorSintactico = SALTO_LN + "Linea: " + sim.left + SALTO_LN + "Columna: " + sim.right + SALTO_LN+ "Token: " + sim.value + SALTO_LN;
+
+    public void printSintaxError(Symbol sim) {
+        if (sim.value != null) {
+            errorSintactico = SALTO_LN + "Linea: " + sim.left + SALTO_LN + "Columna: " + sim.right + SALTO_LN + "Token: " + sim.value + SALTO_LN;
         } else {
-            errorSintactico = SALTO_LN + "Linea: " + sim.left + SALTO_LN + "Columna: " + sim.right  + SALTO_LN + "Token sin ingresar" + SALTO_LN;
+            errorSintactico = SALTO_LN + "Linea: " + sim.left + SALTO_LN + "Columna: " + sim.right + SALTO_LN + "Token sin ingresar" + SALTO_LN;
         }
     }
-    
-    public void printSintaxError(String error) /*throws Exception*/{
+
+    public void printSintaxError(String error) /*throws Exception*/ {
         printInAreaTexto("----ERROR----\nTipo de error: Sintactico" + SALTO_LN + error + errorSintactico);
         //throw new Exception("Error Sintactico" + SALTO_LN + error + errorSintactico);
+    }
+
+    private boolean existSubprogram(String var) {
+        return tablaSimbolos.existSubprogram(var);
+    }
+
+    private boolean existGlobalArray(String var) {
+        return tablaSimbolos.existGlobalArray(var);
+    }
+
+    private boolean existGlobalVariable(String var) {
+        return tablaSimbolos.existGlobalVariable(var);
+    }
+
+    private boolean existGlobalVariableOrArray(String var) {
+        return tablaSimbolos.existGlobalVariableOrArray(var);
+    }
+
+    private boolean existLocalArray(String var) {
+        return tablaSimbolos.existLocalArray(var, subprogramaActual);
+    }
+
+    private boolean existLocalVariableOrParametro(String var) {
+        return tablaSimbolos.existLocalVariableOrParametro(var, subprogramaActual);
+    }
+
+    private boolean existLocalVariableParametroOrArray(String var) {
+        return tablaSimbolos.existLocalVariableParametroOrArray(var, subprogramaActual);
+    }
+
+    private boolean existSimbol(String var) {
+        return tablaSimbolos.existSimbol(var);
+    }
+
+    public Cuarteto getSubprograma(String name, Cuarteto body) {
+        return new CuartetoBuilder().operador(SUBPROGRAM).resultado(tablaSimbolos.getSubprogram(name)).componentes(body).build();
     }
 
     public void setGlobal(boolean global) {
@@ -986,6 +1193,30 @@ public class ManejadorParser {
 
     public void setSubprogramaActual(String subprogramaActual) {
         this.subprogramaActual = subprogramaActual;
+    }
+
+    public TablaSimbolos getTablaSimbolos() {
+        return tablaSimbolos;
+    }
+
+    public int getContadorEtq() {
+        return contadorEtq;
+    }
+
+    public String getEtiquetaResult() {
+        return etiquetaResult;
+    }
+
+    public String getSubprogramaActual() {
+        return subprogramaActual;
+    }
+
+    public String getErrorSintactico() {
+        return errorSintactico;
+    }
+
+    public boolean isGlobal() {
+        return global;
     }
 
     public final static String SIGN_EQUAL = "=";
@@ -1018,6 +1249,9 @@ public class ManejadorParser {
     public final static String MINUS = "-";
     public final static String BOOL = "BOOL";
     public final static String VAR_BOOL = "VARBOOL";
+    public final static String SUBPROGRAM_CALL = "SUBPROGRAM_CALL";
+    public final static String SUBPROGRAM = "SUBPROGRAM";
+    public final static String RETURN = "RETURN";
     public final static String SCAN = "SCAN";
     public final static String LOWER_EQ = "<=";
     public final static String HIGHER_EQ = ">=";
@@ -1038,8 +1272,17 @@ public class ManejadorParser {
     public final static int VAR_LOCAL = 2;
     public final static int PARAMETRO = 3;
     public final static int SUBPROGRAMA = 4;
+    /*private AccionParser acciones = null;
+    private AsignadorValores asignador = null;
+    private DeclaradorValores declarador = null;
+    private ProcesadorFunciones procesadorFunciones = null;
+    private ProcesadorNumerico operador = null;
+    private RetornadorValores retornador = null;*/
+    //private LinkedList <String>
     private int contador = 0;
     private int contadorEtq = 1;
+    private ManejadorAreaTexto manejadorAreaTexto = null;
+    private TablaSimbolos tablaSimbolos = null;
     private String etiquetaResult = null;
     public String subprogramaActual = "";
     private String errorSintactico = null;

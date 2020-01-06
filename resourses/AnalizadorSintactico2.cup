@@ -3,8 +3,7 @@ package codigo3d.backend.analizadores;
 import java_cup.runtime.*;
 import codigo3d.backend.manejadores.*;
 import codigo3d.backend.objetos.*;
-import java.awt.Color;
-
+import java.util.LinkedList;
 parser code {:
 
 	private ManejadorParser mp = null;
@@ -46,7 +45,8 @@ non terminal Cuarteto 	bodyInstruction, bodyInstructionA, bodySubprogram, instru
 non terminal String 	assign1;
 non terminal Cuarteto 	assign, assign2, assign3, formalAssign, decl1, decls, declns, declns1;
 non terminal Cuarteto 	arrayAssign, arrayPosition;
-non terminal Cuarteto 	array, assignA, arrayDim1, arrayDim;
+non terminal Cuarteto 	array, assignA; 
+non terminal LinkedList <Cuarteto> arrayDim1, arrayDim, arrayDimen, arrayDimen1;
 non terminal Cuarteto 	if, if1, ifA, elseifA, elseifAA, elseA, ifB, elseifB, elseifBB, elseB;
 non terminal Cuarteto 	while, whileA;
 non terminal String 	signo;
@@ -57,12 +57,12 @@ non terminal String 	rel;
 non terminal Tipo 	 	tipo;
 non terminal Simbolo 	num, bool;
 non terminal Cuarteto 	exp;
-non terminal Cuarteto 	opNum, e;
+non terminal Cuarteto 	opNum, opNum2, ex, ex2;
 non terminal Cuarteto 	opBol, b;
 non terminal Cuarteto 	opRel, r, expRel, er;
 non terminal Cuarteto 	scans, scann;
 non terminal Cuarteto 	subprogram, parametros, parametrosA, parametro, rtrn;
-non terminal Cuarteto 	subprogramCall, paramsA, paramsProgram;
+non terminal Cuarteto 	subprogramCall, paramsProgram, paramsA;
 
 precedence left 		ELSE;
 precedence left 		ELSIF;
@@ -88,6 +88,8 @@ globalInstruction ::= 	bodyInstruction SEPARATOR mainInstruction
 						;
 
 mainInstruction ::= 	MAIN:e1 OPEN_BRK CLOSE_BRK {:mp.setMainDecl(e1);mp.setGlobal(false);:} block {:mp.setGlobal(true);:}
+						| MAIN:e OPEN_BRK CLOSE_BRK
+						| MAIN:e
 						| error:e {:mp.printSintaxError("Estructura de MAIN no valida o faltante");:} CLOSE_BRK
 						;
 
@@ -130,15 +132,15 @@ programInstructionB ::=	formalAssign:e {:RESULT = e;:}
 						| error:e {:mp.printSintaxError("Instruccion no conocida en cuerpo de programa: ");:} SEMICOLON //BOOLEAN VARIABLE SEMICOLON
 						;
 
-subprogramCall ::= 		VARIABLE paramsA
+subprogramCall ::= 		VARIABLE:e1 paramsA:e2 {:/*RESULT = mp.getSubprogramCall(e1, e2, e1left, e1right);*/:}
 						;
 
-paramsA ::= 			OPEN_BRK CLOSE_BRK
-						| OPEN_BRK paramsProgram CLOSE_BRK
+paramsA ::= 			OPEN_BRK CLOSE_BRK {:RESULT = null;:}
+						| OPEN_BRK paramsProgram:e CLOSE_BRK {:RESULT = e;:}
 						;
 
-paramsProgram ::= 		paramsProgram COMMA opNum
-						| opNum
+paramsProgram ::= 		paramsProgram:e1 COMMA opNum:e2 {:RESULT = mp.getComponentes(e1, e2);:}
+						| opNum:e {:RESULT = mp.getComponente(e);:}
 						| error:e {:mp.printSintaxError("Parametros no validos para llamada de subprograma");:} opNum //VARIABLE
 						;
 
@@ -217,15 +219,23 @@ assign3 ::= 			VARIABLE:e1 ASSIGN:e2 {:RESULT = mp.getSimpleAsign(e1, e1left, e1
 						| error:e {:mp.printSintaxError("Error de asignacion variable");:} ASSIGN //VARIABLE ASSIGN
 						;
 
-arrayDim ::= 			arrayDim:e1 arrayDim1:e2 {:RESULT = mp.getDimensions(e1, e2);:}
-						| arrayDim1:e {:RESULT = e;:}
+arrayDim ::= 			arrayDim:e1 arrayDim1:e2 {::}
+						| arrayDim1:e {::}
 						;
 
-arrayDim1 ::= 			OPEN_SQR opNum:e CLOSE_SQR {:RESULT = mp.getDimension(e, eleft, eright);:}
+arrayDim1 ::= 			OPEN_SQR opNum:e CLOSE_SQR {::}
 						| error:e {:mp.printSintaxError("Error de array dimension");:} CLOSE_SQR //OPEN_SQR NUM_INTEGER CLOSE_SQR
 						;
 
-array ::= 				ARRAY tipo:e1 arrayDim:e2 assignA:e3 SEMICOLON {:RESULT = mp.setArrayDecl(e1, e2, e3);:}
+arrayDimen ::= 			arrayDimen:e1 arrayDimen1:e2 {:RESULT = mp.getDimensions(e1, e2);:}
+						| arrayDimen1:e {:RESULT = e;:}
+						;
+
+arrayDimen1 ::= 		OPEN_SQR opNum2:e CLOSE_SQR {:RESULT = mp.getDimension(e, eleft, eright);:}
+						| error:e {:mp.printSintaxError("Error de array dimension");:} CLOSE_SQR //OPEN_SQR NUM_INTEGER CLOSE_SQR
+						;
+
+array ::= 				ARRAY tipo:e1 arrayDimen:e2 assignA:e3 SEMICOLON {:RESULT = mp.setArrayDecl(e1, e2, e3);:}
 						//| error:e {:mp.printSintaxError("Error de array definicion");:} //ARRAY INT OPEN_SQR NUM_INTEGER CLOSE_SQR VARIABLE SEMICOLON
 						;
 
@@ -349,21 +359,38 @@ exp ::= 				opNum:e {:RESULT = e;:}
 						//| error {::} //VARIABLE
 						;
 
-opNum ::= 				e:e {:RESULT = mp.orderOpNum(e);:}
+opNum ::= 				ex:e {::}
 						;
 
-e ::= 					e:e1 MULTI:e2 e:e3 {:RESULT = mp.getMulti(e1, e2, e3);:}
-						| e:e1 MINUS:e2 e:e3 {:RESULT = mp.getResta(e1, e2, e3);:}
-						| e:e1 DIVISION:e2 e:e3 {:RESULT = mp.getDivision(e1, e2, e3);:}
-						| e:e1 MODULE:e2 e:e3 {:RESULT = mp.getModulo(e1,e2, e3);:}
-						| e:e1 PLUS:e2 e:e3 {:RESULT = mp.getSumaConcatenacion(e1, e2, e3);:}
-						| OPEN_BRK e:e CLOSE_BRK {:RESULT = e;:}
+ex ::= 					ex:e1 MULTI:e2 ex:e3 {::}
+						| ex:e1 MINUS:e2 ex:e3 {::}
+						| ex:e1 DIVISION:e2 ex:e3 {::}
+						| ex:e1 MODULE:e2 ex:e3 {::}
+						| ex:e1 PLUS:e2 ex:e3 {::}
+						| OPEN_BRK ex:e CLOSE_BRK {::}
+						| num:e {::}
+						| arrayPosition:e {::}
+						| VARIABLE:e {::}
+						| TEXT:e {::}
+						| bool:e {::}
+						| subprogramCall:e {::}
+						;
+
+opNum2 ::= 				ex2:e {:RESULT = mp.orderOpNum(e);:}
+						;
+
+ex2 ::= 				ex2:e1 MULTI:e2 ex2:e3 {:RESULT = mp.getMulti(e1, e2, e3);:}
+						| ex2:e1 MINUS:e2 ex2:e3 {:RESULT = mp.getResta(e1, e2, e3);:}
+						| ex2:e1 DIVISION:e2 ex2:e3 {:RESULT = mp.getDivision(e1, e2, e3);:}
+						| ex2:e1 MODULE:e2 ex2:e3 {:RESULT = mp.getModulo(e1,e2, e3);:}
+						| ex2:e1 PLUS:e2 ex2:e3 {:RESULT = mp.getSumaConcatenacion(e1, e2, e3);:}
+						| OPEN_BRK ex2:e CLOSE_BRK {:RESULT = e;:}
 						| num:e {:RESULT = mp.getCuartetoNum(e);:}
 						| arrayPosition:e {::}
 						| VARIABLE:e {:RESULT = mp.getVariable(e, eleft, eright);:}
 						| TEXT:e {:RESULT = mp.getCuartetoString(e, eleft, eright);:}
 						| bool:e {:RESULT = mp.getCuartetoBool(e);:}
-						| subprogramCall
+						| subprogramCall:e {:RESULT = e;:}
 						;
 
 num ::= 				NUM_INTEGER:e {:RESULT = mp.getSimbolEntero(e, eleft, eright);:}

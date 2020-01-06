@@ -28,14 +28,26 @@ public class TablaSimbolos {
         return simbolos.get(simbol);
     }
 
-    public Simbolo getLocalVariable(String var, String subprograma){
+    public Simbolo getLocalVariable(String var, String subprograma) {
         return getSimbol(getLocalName(var, subprograma));
     }
-    
-    public Simbolo getGlobalVariable(String var){
+
+    public Simbolo getLocalArray(String var, String subprograma) {
+        return getSimbol(getLocalName(var, subprograma));
+    }
+
+    public Simbolo getGlobalVariable(String var) {
         return getSimbol(getGlobalName(var));
     }
-    
+
+    public Simbolo getGlobalArray(String var) {
+        return getSimbol(getGlobalName(var));
+    }
+
+    public Simbolo getSubprogram(String var) {
+        return getSimbol(var);
+    }
+
     public boolean isSubprogram(String categoria) {
         return categoria.equals(SUBPROGRAMA);
     }
@@ -48,10 +60,10 @@ public class TablaSimbolos {
         return categoria.equals(PARAMETRO);
     }
 
-    public boolean isArreglo(String categoria){
+    public boolean isArreglo(String categoria) {
         return categoria.equals(ARREGLO);
     }
-    
+
     public boolean existSubprogram(String simbol) {
         if (existSimbol(simbol)) {
             return isSubprogram(getSimbol(simbol).getCategoria());
@@ -74,8 +86,8 @@ public class TablaSimbolos {
         }
         return false;
     }
-    
-    public boolean existLocalArray(String var, String subprograma){
+
+    public boolean existLocalArray(String var, String subprograma) {
         String nombreVar = getLocalName(var, subprograma);
         if (existSimbol(nombreVar)) {
             return isArreglo(getSimbol(nombreVar).getCategoria());
@@ -83,25 +95,25 @@ public class TablaSimbolos {
         return false;
     }
 
-    public boolean existGlobalArray(String var){
+    public boolean existGlobalArray(String var) {
         String variable = getGlobalName(var);
         if (existSimbol(variable)) {
             return isArreglo(getSimbol(variable).getCategoria());
         }
         return false;
     }
-    
-    public boolean existLocalVariableParametroOrArray(String var, String subprograma){
+
+    public boolean existLocalVariableParametroOrArray(String var, String subprograma) {
         return existLocalVariableOrParametro(var, subprograma) || existLocalArray(var, subprograma);
     }
-    
-    public boolean existGlobalVariableOrArray(String var){
+
+    public boolean existGlobalVariableOrArray(String var) {
         return existGlobalVariable(var) || existGlobalArray(var);
     }
-    
+
     public void setSubprogram(Tipo tipo, String simbol) {
         Simbolo simbolo = new SimboloBuilder().lexema(simbol).categoria(SUBPROGRAMA).
-                ambito(AMBITO_LOCAL).token(tipo).parametros(new LinkedList<>()).build();
+                ambito(AMBITO_LOCAL).token(tipo).parametros(new LinkedList<>()).estructura(new LinkedList<>()).build();
         simbolos.put(simbolo.getLexema(), simbolo);
     }
 
@@ -112,13 +124,13 @@ public class TablaSimbolos {
         simbolos.put(simbolo.getLexema(), simbolo);
     }
 
-    public void setLocalArray(Tipo tipo, String var, LinkedList<String> dimension, String subprograma) {
+    public void setLocalArray(Tipo tipo, String var, LinkedList<Cuarteto> dimension, String subprograma) {
         String nombreVar = getLocalName(var, subprograma);
         Simbolo simbolo = new SimboloBuilder().token(tipo).lexema(nombreVar).categoria(ARREGLO).
                 ambito(AMBITO_LOCAL).noDimensiones(dimension.size()).dimensiones(dimension).build();
         simbolos.put(simbolo.getLexema(), simbolo);
     }
-    
+
     public void setParametro(Tipo tipo, String var, String subprograma) {
         String nombreVar = getLocalName(var, subprograma);
         Simbolo simbolo = new SimboloBuilder().token(tipo).lexema(nombreVar).categoria(PARAMETRO).
@@ -132,8 +144,8 @@ public class TablaSimbolos {
                 ambito(AMBITO_GLOBAL).build();
         simbolos.put(simbolo.getLexema(), simbolo);
     }
-    
-    public void setGlobalArray(Tipo tipo, String var, LinkedList<String> dimension) {
+
+    public void setGlobalArray(Tipo tipo, String var, LinkedList<Cuarteto> dimension) {
         String nombreVar = getGlobalName(var);
         Simbolo simbolo = new SimboloBuilder().token(tipo).lexema(nombreVar).categoria(ARREGLO).
                 ambito(AMBITO_GLOBAL).noDimensiones(dimension.size()).dimensiones(dimension).build();
@@ -145,12 +157,22 @@ public class TablaSimbolos {
         subprogram.getParametros().add(tipo);
         subprogram.setNoParametros(subprogram.getParametros().size());
     }
-    
-    private String getLocalName(String var, String subprograma){
+
+    public void addSubprogramEstructura(Cuarteto instruccion, String name) {
+        Simbolo subprogram = getSimbol(name);
+        subprogram.getEstructura().add(instruccion);
+    }
+
+    public void setSubprogramBooleanValorReturn(boolean valorReturn, String name) {
+        Simbolo sim = getSubprogram(name);
+        sim.setValorRetorno(valorReturn);
+    }
+
+    private String getLocalName(String var, String subprograma) {
         return var + subprograma;
     }
-    
-    private String getGlobalName(String var){
+
+    private String getGlobalName(String var) {
         return GLOBAL_VAR + var;
     }
 
