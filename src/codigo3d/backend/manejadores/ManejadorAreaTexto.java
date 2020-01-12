@@ -30,23 +30,33 @@ public class ManejadorAreaTexto {
         if (!entrada.trim().isEmpty()) {
             StringReader sr = new StringReader(entrada);
             StringReader sr2 = new StringReader(entrada);
-            
+
             Lexer1 lexer = new Lexer1(sr);
             Lexer1 lexer2 = new Lexer1(sr2);
-            
+
             lexer.setManejadorParser(mp);
             lexer2.setManejadorParser(mp);
-            
+
             parser generador = new parser(lexer2, mp);
             parser2 declarador = new parser2(lexer, mp);
+            
             try {
                 //Primer analisis - reconocimiento de variables, subprogramas y parametros
                 declarador.parse();
-                //Segundo analisis - generacion de cuartetos
-                generador.parse();
             } catch (Exception e) {
                 e.printStackTrace();
+                mp.setNoError(false);
                 printError(e.getMessage());
+            }
+            
+            if (mp.isNoError()) {
+                try {
+                    //Segundo analisis - generacion de cuartetos
+                    generador.parse();
+                } catch (Exception e) {
+                    e.printStackTrace();
+                    printError(e.getMessage());
+                }
             }
         }
     }
@@ -94,10 +104,10 @@ public class ManejadorAreaTexto {
         at.getNavegador().setText(ERROR_MESSAGE + "Tipo de error: " + error);
     }
 
-    public void printSemanticError(String error){
+    public void printSemanticError(String error) {
         at.getNavegador().setText(at.getNavegador().getText() + ERROR_MESSAGE + "Tipo de error: " + error + SALTO_LINEA + "Imposible de recuperar");
     }
-    
+
     public void printSintaxError(String error) {
         printTerminal(ERROR_MESSAGE + "Tipo de error: " + error);
     }

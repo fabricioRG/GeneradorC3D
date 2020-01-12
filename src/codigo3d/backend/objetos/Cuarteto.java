@@ -4,7 +4,7 @@ package codigo3d.backend.objetos;
  * 
  * @author fabricioRG
  */
-public class Cuarteto {
+public class Cuarteto implements Cloneable{
 
     private String operador;
     private Simbolo operando1;
@@ -16,6 +16,12 @@ public class Cuarteto {
     private Cuarteto auxiliar;
     
     private Cuarteto(){
+    }
+    
+    @Override
+    public Cuarteto clone() throws CloneNotSupportedException{
+        Cuarteto cloneCuarteto=(Cuarteto) super.clone();
+        return cloneCuarteto;
     }
     
     Cuarteto(CuartetoBuilder builder){
@@ -30,7 +36,11 @@ public class Cuarteto {
     }
 
     public Cuarteto getAuxiliar() {
-        return auxiliar;
+        return (Cuarteto)auxiliar;
+    }
+    
+    public Cuarteto getAuxiliarClone() throws CloneNotSupportedException {
+        return (Cuarteto)auxiliar.clone();
     }
 
     public void setAuxiliar(Cuarteto auxiliar) {
@@ -48,6 +58,10 @@ public class Cuarteto {
     public Simbolo getOperando1() {
         return operando1;
     }
+    
+    public Simbolo getOperando1Clone() throws CloneNotSupportedException {
+        return (Simbolo) operando1.clone();
+    }
 
     public void setOperando1(Simbolo operando1) {
         this.operando1 = operando1;
@@ -56,7 +70,11 @@ public class Cuarteto {
     public Simbolo getOperando2() {
         return operando2;
     }
-
+    
+    public Simbolo getOperando2Clone() throws CloneNotSupportedException {
+        return (Simbolo) operando2.clone();
+    }
+    
     public void setOperando2(Simbolo operando2) {
         this.operando2 = operando2;
     }
@@ -64,13 +82,21 @@ public class Cuarteto {
     public Simbolo getResultado() {
         return resultado;
     }
+    
+    public Simbolo getResultadoClone() throws CloneNotSupportedException {
+        return resultado.clone();
+    }
 
     public void setResultado(Simbolo resultado) {
         this.resultado = resultado;
     }
 
     public Cuarteto getSiguiente() {
-        return siguiente;
+        return (Cuarteto)siguiente;
+    }
+    
+    public Cuarteto getSiguienteClone() throws CloneNotSupportedException {
+        return (Cuarteto)siguiente.clone();
     }
 
     public void setSiguiente(Cuarteto siguiente) {
@@ -78,7 +104,11 @@ public class Cuarteto {
     }
 
     public Cuarteto getComponentes() {
-        return componentes;
+        return (Cuarteto)componentes;
+    }
+    
+    public Cuarteto getComponentesClone() throws CloneNotSupportedException {
+        return (Cuarteto)componentes.clone();
     }
 
     public void setComponentes(Cuarteto componentes) {
@@ -86,7 +116,11 @@ public class Cuarteto {
     }
 
     public Cuarteto getRestriccion() {
-        return restriccion;
+        return (Cuarteto)restriccion;
+    }
+    
+    public Cuarteto getRestriccionClone() throws CloneNotSupportedException {
+        return (Cuarteto)restriccion.clone();
     }
 
     public void setRestriccion(Cuarteto restriccion) {

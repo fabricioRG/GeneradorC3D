@@ -6,7 +6,7 @@ import java.util.LinkedList;
  * 
  * @author fabricioRG
  */
-public class Simbolo {
+public class Simbolo implements Cloneable{
 
     private String lexema;
     private Tipo token;
@@ -36,6 +36,12 @@ public class Simbolo {
         this.valorRetorno = builder.isValorRetorno();
     }
 
+    @Override
+    public Simbolo clone() throws CloneNotSupportedException {
+        Simbolo cloneSimbolo = (Simbolo) super.clone();
+        return cloneSimbolo;
+    }
+    
     public String getLexema() {
         return lexema;
     }

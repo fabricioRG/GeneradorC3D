@@ -153,7 +153,7 @@ public class TablaSimbolos {
     }
 
     public void addSubprogramParametro(Tipo tipo, String name) {
-        Simbolo subprogram = getSimbol(name);
+        Simbolo subprogram = getSubprogram(name);
         subprogram.getParametros().add(tipo);
         subprogram.setNoParametros(subprogram.getParametros().size());
     }

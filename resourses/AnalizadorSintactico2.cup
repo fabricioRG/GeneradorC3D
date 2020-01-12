@@ -47,7 +47,7 @@ non terminal Cuarteto 	assign, assign2, assign3, formalAssign, decl1, decls, dec
 non terminal Cuarteto 	arrayAssign, arrayPosition;
 non terminal Cuarteto 	array, assignA; 
 non terminal LinkedList <Cuarteto> arrayDim1, arrayDim, arrayDimen, arrayDimen1;
-non terminal Cuarteto 	if, if1, ifA, elseifA, elseifAA, elseA, ifB, elseifB, elseifBB, elseB;
+non terminal Cuarteto 	if, if1, if2, ifA, elseifA, elseifAA, elseifAA1, elseA;
 non terminal Cuarteto 	while, whileA;
 non terminal String 	signo;
 non terminal Cuarteto 	for, forA;
@@ -115,8 +115,7 @@ programInstruction ::= 	programInstruction programInstructionA
 						| programInstructionA
 						;
 
-programInstructionA ::= rtrn 
-						| programInstructionB
+programInstructionA ::= programInstructionB
 						;
 
 programInstructionB ::=	formalAssign:e {:RESULT = e;:}
@@ -129,6 +128,7 @@ programInstructionB ::=	formalAssign:e {:RESULT = e;:}
 						| println:e {:RESULT = e;:}
 						| scans:e {::}
 						| scann:e {::}
+						| rtrn 
 						| error:e {:mp.printSintaxError("Instruccion no conocida en cuerpo de programa: ");:} SEMICOLON //BOOLEAN VARIABLE SEMICOLON
 						;
 
@@ -197,6 +197,7 @@ instruction ::=  		decl:e {:RESULT = e;:}
 						| println:e {:RESULT = e;:}
 						| scans:e {::}
 						| scann:e {::}
+						| rtrn:e {::}
 						| error:e {:mp.printSintaxError("Instruccion no conocida");:} SEMICOLON
 						;
 
@@ -251,43 +252,34 @@ arrayPosition ::= 		VARIABLE:e1 arrayDim {::}
 						| error:e {:mp.printSintaxError("Error array posicion");:} CLOSE_SQR //VARIABLE OPEN_SQR NUM_INTEGER CLOSE_SQR
 						;
 
-if ::= 					IF OPEN_BRK if1 CLOSE_BRK ifA {::}
-						| IF OPEN_BRK if1 CLOSE_BRK ifB {::}
+if ::= 					if1:e1 ifA:e2 {::}
+						| if1:e {::}
 						;
 
-if1 ::= 				opBol:e {:RESULT = e;:}
+if1 ::= 				IF:e1 OPEN_BRK opBol:e2 CLOSE_BRK if2:e3 {::}
 						;
 
-ifA ::= 				instruction elseifA elseA {::}
-						| instruction elseifA {::}
-						| instruction elseA {::}
-						| instruction {::}
+if2 ::= 				instruction:e {::}
+						| block:e {::}
+						;
+
+ifA ::= 				elseifA elseA {::}
+						| elseifA {::}
+						| elseA {::}
 						;
 
 elseifA ::= 			elseifA elseifAA {::}
 						| elseifAA {::}
 						;
 
-elseifAA ::= 			ELSIF OPEN_BRK opBol CLOSE_BRK instruction {::}
+elseifAA ::= 			ELSIF OPEN_BRK opBol CLOSE_BRK elseifAA1 {::}
 						;
 
-elseA ::= 				ELSE instruction {::}
-						;
-
-ifB ::= 				block elseifB elseB {::}
-						| block elseifB {::}
-						| block elseB {::}
+elseifAA1 ::= 			instruction {::}
 						| block {::}
 						;
 
-elseifB ::= 			elseifB elseifBB {::}
-						| elseifBB {::}
-						;
-
-elseifBB ::= 			ELSIF:e1 OPEN_BRK opBol:e2 CLOSE_BRK block:e3 {::}
-						;
-
-elseB ::= 				ELSE:e1 block:e2 {::}
+elseA ::= 				ELSE elseifAA1 {::}
 						;
 
 while ::= 				WHILE:e1 OPEN_BRK opBol:e2 CLOSE_BRK whileA:e3 
@@ -401,20 +393,20 @@ num ::= 				NUM_INTEGER:e {:RESULT = mp.getSimbolEntero(e, eleft, eright);:}
 opBol ::= 				b:e {:RESULT = e;:}
 						;
 
-b ::= 					b:e1 AND:e2 b:e3 {:RESULT = mp.getAnd(e1, e2, e3);:}
-						| b:e1 OR:e2 b:e3 {:RESULT = mp.getOr(e1, e2, e3);:}
-						| NOT:e1 b:e2 {:RESULT = mp.getNot(e1,e2);:}
-						| OPEN_BRK b:e CLOSE_BRK {:RESULT = e;:}
-						| opRel:e {:RESULT = e;:}
-						| VARIABLE:e {:RESULT = mp.getVariableRel(e, eleft, eright);:}
-						| bool:e {:RESULT = mp.getBool(e);:}
+b ::= 					b:e1 AND:e2 b:e3 {::}
+						| b:e1 OR:e2 b:e3 {::}
+						| NOT:e1 b:e2 {::}
+						| OPEN_BRK b:e CLOSE_BRK {::}
+						| opRel:e {::}
+						| VARIABLE:e {::}
+						| bool:e {::}
 						| subprogramCall
 						;
 
 opRel ::= 				r:e {:RESULT = e;:}
 						;
 
-r ::= 					expRel:e1 rel:e2 expRel:e3 {:RESULT = mp.getRelacion(e1, e2, e3);:}
+r ::= 					expRel:e1 rel:e2 expRel:e3 {::}
 						| error:e {:mp.printSintaxError("Error de expresion relacional");:} //VARIABLE LOWER VARIABLE
 						;
 
@@ -426,17 +418,17 @@ rel ::= 				HIGHER:e {:RESULT = e;:}
 						| EQUAL:e {:RESULT = e;:}
 						;
 
-expRel ::= 				er:e {:RESULT = mp.orderOpNum(e);:}
+expRel ::= 				er:e {::}
 						;
 
-er ::= 					er:e1 MULTI:e2 er:e3 {:RESULT = mp.getMulti(e1, e2, e3);:}
-						| er:e1 MINUS:e2 er:e3 {:RESULT = mp.getResta(e1, e2, e3);:}
-						| er:e1 DIVISION:e2 er:e3 {:RESULT = mp.getDivision(e1, e2, e3);:}
-						| er:e1 MODULE:e2 er:e3 {:RESULT = mp.getModulo(e1,e2, e3);:}
-						| er:e1 PLUS:e2 er:e3 {:RESULT = mp.getSumaConcatenacion(e1, e2, e3);:}
-						| num:e {:RESULT = mp.getCuartetoNum(e);:}
+er ::= 					er:e1 MULTI:e2 er:e3 {::}
+						| er:e1 MINUS:e2 er:e3 {::}
+						| er:e1 DIVISION:e2 er:e3 {::}
+						| er:e1 MODULE:e2 er:e3 {::}
+						| er:e1 PLUS:e2 er:e3 {::}
+						| num:e {::}
 						| arrayPosition:e {::}
-						| VARIABLE:e {:RESULT = mp.getVariable(e, eleft, eright);:}
+						| VARIABLE:e {::}
 						| subprogramCall
 						;
 
