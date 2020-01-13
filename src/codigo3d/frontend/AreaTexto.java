@@ -26,6 +26,7 @@ import javax.swing.undo.CannotRedoException;
 import javax.swing.undo.UndoManager;
 import org.jdesktop.observablecollections.ObservableCollections;
 import org.jdesktop.observablecollections.ObservableList;
+import codigo3d.backend.objetos.TextLineNumber;
 
 /**
  *
@@ -87,6 +88,8 @@ public class AreaTexto extends javax.swing.JPanel implements KeyListener, MouseL
         interprete.setCaretColor(new java.awt.Color(248, 248, 240));
         interprete.setMargin(new java.awt.Insets(7, 7, 7, 7));
         jScrollPane1.setViewportView(interprete);
+        tln = new TextLineNumber(interprete);
+        jScrollPane1.setRowHeaderView(tln);
 
         jLabel1.setFont(new java.awt.Font("Open Sans", 1, 12)); // NOI18N
         jLabel1.setForeground(new java.awt.Color(2, 36, 61));
@@ -125,6 +128,8 @@ public class AreaTexto extends javax.swing.JPanel implements KeyListener, MouseL
         navegador.setForeground(new java.awt.Color(255, 255, 255));
         navegador.setCursor(new java.awt.Cursor(java.awt.Cursor.TEXT_CURSOR));
         jScrollPane4.setViewportView(navegador);
+        tln2 = new TextLineNumber(navegador);
+        jScrollPane4.setRowHeaderView(tln2);
 
         jButton5.setBackground(new java.awt.Color(254, 254, 254));
         jButton5.setForeground(new java.awt.Color(2, 4, 179));
@@ -308,6 +313,8 @@ public class AreaTexto extends javax.swing.JPanel implements KeyListener, MouseL
     private javax.swing.JScrollPane jScrollPane4;
     private javax.swing.JTextPane navegador;
     private javax.swing.JLabel sizeLabel;
+    private TextLineNumber tln;
+    private TextLineNumber tln2;
     // End of variables declaration//GEN-END:variables
 
 }

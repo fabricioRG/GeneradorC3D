@@ -552,4 +552,30 @@ PRINT["ALGO2"];
 %%%
 MAIN 
 
+void x ()[
+IF ((2 > 3 AND 4 < 3) OR (2 == 4 OR 3 > 4))[
+PRINT["ALGO"];
+] ELSIF(200< 30)[
+PRINT["ALGOMAS"];
+]
+]
+%%%MAIN
+
+int suma (int a, int b)[
+return a + b;
+]
+void x ()[
+int x, y, z, i;
+ARRAY int [20+7][20][30] array1;
+%%%
+i <- 0;
+WHILE (array1[x +1][y+1][z+1] > y)[
+PRINT[x,y,z, 2 + 3];
+x <- suma(array1[x][y][z], i);
+i <- i + 1;
+]
+
+]
+%%%MAIN
+
 */

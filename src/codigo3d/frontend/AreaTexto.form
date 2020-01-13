@@ -129,6 +129,9 @@
                   <Insets value="[7, 7, 7, 7]"/>
                 </Property>
               </Properties>
+              <AuxValues>
+                <AuxValue name="JavaCodeGenerator_SerializeTo" type="java.lang.String" value="AreaTexto_interprete"/>
+              </AuxValues>
             </Component>
           </SubComponents>
         </Container>
