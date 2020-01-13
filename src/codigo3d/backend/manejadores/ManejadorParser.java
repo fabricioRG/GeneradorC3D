@@ -482,14 +482,9 @@ public class ManejadorParser {
 
     public Cuarteto getOr(Cuarteto sim1, String or, Cuarteto sim2) throws Exception {
         if (areBoolean(sim1.getResultado(), sim2.getResultado())) {
-            Cuarteto sim3 = sim1;
-            Cuarteto i = sim1.getSiguiente();
-            while (i != null) {
-                sim3 = i;
-                i = i.getSiguiente();
-            }
+            Cuarteto sim3 = getLastCuarteto(sim1);
             setEtiquetaResult(sim3.getOperando2().getLexema());
-            sim3.setOperador(or);
+            sim3.setOperador(OR);
             sim3.setAuxiliar(getCuartetoString(OR, 0, 0));
             if (sim2.getOperador() != null) {
                 if (!sim2.getOperador().equals(AND)) {
@@ -502,7 +497,7 @@ public class ManejadorParser {
             sim2.setResultado(getSimbolString(setMinusEtiqueta()));
             sim3.setSiguiente(sim2);
             if (sim2.getOperador() == null) {
-                sim2.setOperador(or);
+                sim2.setOperador(OR);
             }
             return sim1;
         } else {
@@ -517,19 +512,14 @@ public class ManejadorParser {
 
     public Cuarteto getAnd(Cuarteto sim1, String and, Cuarteto sim2) throws Exception {
         if (areBoolean(sim1.getResultado(), sim2.getResultado())) {
-            Cuarteto sim3 = sim1;
-            Cuarteto i = sim1.getSiguiente();
-            while (i != null) {
-                sim3 = i;
-                i = i.getSiguiente();
-            }
+            Cuarteto sim3 = getLastCuarteto(sim1);
             sim2.setResultado(sim3.getResultado());
-            sim3.setOperador(and);
+            sim3.setOperador(AND);
             sim3.setAuxiliar(getCuartetoString(AND, 0, 0));
             setMinusEtiqueta();
             sim3.setSiguiente(sim2);
             if (sim2.getOperador() == null) {
-                sim2.setOperador(and);
+                sim2.setOperador(AND);
                 sim2.setAuxiliar(getCuartetoString(AND, 0, 0));
             }
             return sim1;
@@ -604,7 +594,7 @@ public class ManejadorParser {
         return array;
     }
 
-    public Cuarteto getScanNumber(String var, int fila, int columna) throws Exception{
+    public Cuarteto getScanNumber(String var, int fila, int columna) throws Exception {
         Simbolo sim = null;
         if (!global && existLocalVariableOrParametro(var)) {
             sim = getLocalVariable(var, subprogramaActual);
@@ -625,7 +615,7 @@ public class ManejadorParser {
         return new CuartetoBuilder().operador(SCANN).resultado(sim).build();
     }
 
-    public Cuarteto getScanNumber(Cuarteto array, int fila, int columna) throws Exception{
+    public Cuarteto getScanNumber(Cuarteto array, int fila, int columna) throws Exception {
         if (!TablaTipos.getInstance().isNumber(array.getResultado().getToken())) {
             throw new Exception("Diferencia de tipos en SCANN" + SALTO_LN
                     + getValorInfo(new SimboloBuilder().lexema(array.getResultado().getLexema())
@@ -948,22 +938,65 @@ public class ManejadorParser {
         return sim2;
     }
 
-    public void setOperadorAll(Cuarteto head) {
+    private void setOperadorAll(Cuarteto head, String operador) {
         Cuarteto sim = head;
         while (sim != null) {
-            sim.setOperador(CICLO);
+            sim.setOperador(operador);
             sim = sim.getSiguiente();
         }
     }
 
-    public Cuarteto ifOperacion(Cuarteto ifA, Cuarteto ifB){
-        return setAtLast(getLastCuarteto(ifA), ifB);
+    private void setOperando1All(Cuarteto head, Simbolo operando1) {
+        Cuarteto sim = head;
+        while (sim != null) {
+            sim.setOperando1(operando1);
+            sim = sim.getSiguiente();
+        }
     }
-    
+
+    private void setOperando2All(Cuarteto head, Simbolo operando2) {
+        Cuarteto sim = head;
+        while (sim != null) {
+            sim.setOperando2(operando2);
+            sim = sim.getSiguiente();
+        }
+    }
+
+    private void setResultadoAll(Cuarteto head, Simbolo resultado) {
+        Cuarteto sim = head;
+        while (sim != null) {
+            sim.setResultado(resultado);
+            sim = sim.getSiguiente();
+        }
+    }
+
+    private void setResultadoAllIfElse(Cuarteto head, Simbolo resultado) {
+        Cuarteto sim = head;
+        while (sim != null) {
+            if (sim.getOperador() != null) {
+                if (isIfElse(sim.getOperador())) {
+                    sim.setResultado(resultado);
+                }
+            }
+            sim = sim.getSiguiente();
+        }
+    }
+
+    private boolean isIfElse(String operador) {
+        return operador.equals(IF) || operador.equals(ELSEIF) || operador.equals(ELSE);
+    }
+
+    public Cuarteto ifOperacion(Cuarteto ifA, Cuarteto ifB) {
+        setAtLast(ifA, ifB);
+        setResultadoAllIfElse(ifA, getLastCuarteto(ifB).getResultado());
+        return ifA;
+    }
+
     public Cuarteto ifOperacion(Cuarteto restriccion, Cuarteto instructions, int fila, int columna) throws Exception {
-        if(TablaTipos.getInstance().isBoolean(restriccion.getResultado().getToken())){
+        if (TablaTipos.getInstance().isBoolean(restriccion.getResultado().getToken())) {
             Cuarteto last = getLastCuarteto(restriccion);
-            etiquetaResult = getEtiqueta();
+            etiquetaResult = getSimpleEtiqueta();
+            setOperadorAll(restriccion, CICLO);
             Cuarteto result = new CuartetoBuilder().operador(IF).operando1(last.getOperando2()).
                     operando2(restriccion.getOperando1()).resultado(last.getResultado()).componentes(instructions).build();
             return setAtLast(restriccion, result);
@@ -973,10 +1006,12 @@ public class ManejadorParser {
                     + " Token esperado: boolean");
         }
     }
-    
-    public Cuarteto elseIfOperacion(Cuarteto restriccion, Cuarteto instructions, int fila, int columna) throws Exception{
-        if(TablaTipos.getInstance().isBoolean(restriccion.getResultado().getToken())){
+
+    public Cuarteto elseIfOperacion(Cuarteto restriccion, Cuarteto instructions, int fila, int columna) throws Exception {
+        if (TablaTipos.getInstance().isBoolean(restriccion.getResultado().getToken())) {
             Cuarteto last = getLastCuarteto(restriccion);
+            etiquetaResult = getSimpleEtiqueta();
+            setOperadorAll(restriccion, CICLO);
             Cuarteto result = new CuartetoBuilder().operador(ELSEIF).operando1(last.getOperando2()).
                     operando2(restriccion.getOperando1()).resultado(last.getResultado()).componentes(instructions).build();
             return setAtLast(restriccion, result);
@@ -986,22 +1021,22 @@ public class ManejadorParser {
                     + " Token esperado: boolean");
         }
     }
-    
-    public Cuarteto elseOperacion(Cuarteto elseA, Cuarteto elseB){
-        return setAtLast(getLastCuarteto(elseA), elseB);
+
+    public Cuarteto elseOperacion(Cuarteto elseA, Cuarteto elseB) {
+        return setAtLast(elseA, elseB);
     }
-    
-    public Cuarteto elseOperacion(Cuarteto instructions, int fila, int columna){
+
+    public Cuarteto elseOperacion(Cuarteto instructions, int fila, int columna) {
         return new CuartetoBuilder().operador(ELSE).resultado(getSimbolString(getSimpleEtiqueta())).componentes(instructions).build();
     }
-    
+
     public Cuarteto whileOperacion(String whil, Cuarteto restriccion, Cuarteto instructions, int fila, int columna) throws Exception {
         if (TablaTipos.getInstance().isBoolean(restriccion.getResultado().getToken())) {
             Cuarteto last = getLastCuarteto(restriccion);
             etiquetaResult = getEtiqueta();
             Cuarteto result = new CuartetoBuilder().operador(WHILE).operando1(last.getOperando2()).
                     operando2(restriccion.getOperando1()).resultado(last.getResultado()).componentes(instructions).build();
-            setOperadorAll(restriccion);
+            setOperadorAll(restriccion, CICLO);
             return setAtLast(restriccion, result);
         } else {
             throw new Exception("Funcion WHILE" + SALTO_LN
@@ -1016,7 +1051,7 @@ public class ManejadorParser {
             etiquetaResult = getEtiqueta();
             Cuarteto result = new CuartetoBuilder().operador(doW).operando1(last.getOperando2()).
                     operando2(restriccion.getOperando1()).resultado(last.getResultado()).build();
-            setOperadorAll(restriccion);
+            setOperadorAll(restriccion, CICLO);
             restriccion.setComponentes(instructions);
             return setAtLast(restriccion, result);
         } else {
@@ -1053,7 +1088,7 @@ public class ManejadorParser {
             etiquetaResult = getEtiqueta();
             Cuarteto result = new CuartetoBuilder().operador(FOR).operando1(last.getOperando2()).
                     operando2(opBol.getOperando1()).resultado(last.getResultado()).componentes(instructions).restriccion(asign).build();
-            setOperadorAll(opBol);
+            setOperadorAll(opBol, CICLO);
             setAtLast(opBol, result);
             return setAtLast(asignacion, opBol);
         } else {
@@ -1164,13 +1199,13 @@ public class ManejadorParser {
                     printParametro(cuarteto);
                     break;
                 case IF:
-                    
+                    printIf(cuarteto);
                     break;
                 case ELSEIF:
-                    
+                    printElseIf(cuarteto);
                     break;
                 case ELSE:
-                    
+                    printElse(cuarteto);
                     break;
                 case WHILE:
                     printWhile(cuarteto);
@@ -1272,22 +1307,22 @@ public class ManejadorParser {
             println(PRINTLN + SPACE + sim.getResultado().getLexema());
         }
     }
-    
-    private void printScanString(Cuarteto sim){
+
+    private void printScanString(Cuarteto sim) {
         print(sim.getComponentes());
-        if(sim.getOperando1()!= null){
-            println(SCAN_VALUE + SPACE + sim.getResultado().getLexema() + OPEN_SQR +sim.getOperando1().getLexema() + CLOSE_SQR);
+        if (sim.getOperando1() != null) {
+            println(SCAN_VALUE + SPACE + sim.getResultado().getLexema() + OPEN_SQR + sim.getOperando1().getLexema() + CLOSE_SQR);
         } else {
-            println(SCAN_VALUE + SPACE + sim.getResultado().getLexema() );
+            println(SCAN_VALUE + SPACE + sim.getResultado().getLexema());
         }
     }
-    
-    private void printScanNumber(Cuarteto sim){
+
+    private void printScanNumber(Cuarteto sim) {
         print(sim.getComponentes());
-        if(sim.getOperando1()!= null){
-            println(SCAN_VALUE + SPACE + sim.getResultado().getLexema() + OPEN_SQR +sim.getOperando1().getLexema() + CLOSE_SQR);
+        if (sim.getOperando1() != null) {
+            println(SCAN_VALUE + SPACE + sim.getResultado().getLexema() + OPEN_SQR + sim.getOperando1().getLexema() + CLOSE_SQR);
         } else {
-            println(SCAN_VALUE + SPACE + sim.getResultado().getLexema() );
+            println(SCAN_VALUE + SPACE + sim.getResultado().getLexema());
         }
     }
 
@@ -1326,6 +1361,22 @@ public class ManejadorParser {
         } else {
             println(sim.getResultado().getLexema() + SPACE + SIGN_EQUAL + SPACE + sim.getOperando1().getLexema());
         }
+    }
+
+    private void printIf(Cuarteto sim) {
+        println(getEtiquetaPrint(sim.getOperando1()));
+        print(sim.getComponentes());
+        println(GOTO + SPACE + sim.getResultado().getLexema());
+    }
+
+    private void printElseIf(Cuarteto sim) {
+        println(getEtiquetaPrint(sim.getOperando1()));
+        print(sim.getComponentes());
+        println(GOTO + SPACE + sim.getResultado().getLexema());
+    }
+
+    private void printElse(Cuarteto sim) {
+
     }
 
     private void printWhile(Cuarteto sim) {

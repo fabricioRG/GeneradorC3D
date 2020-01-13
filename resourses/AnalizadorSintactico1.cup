@@ -107,7 +107,7 @@ programInstructionA ::= programInstructionB:e {:RESULT = e;mp.addSubprogramInstr
 
 programInstructionB ::=	formalAssign:e {:RESULT = e;:}
 						| arrayAssign:e {:RESULT = e;:}
-						| if:e {::}
+						| if:e {:RESULT = e;:}
 						| while:e {:RESULT = e;:}
 						| for:e {:RESULT = e;:}
 						| doWhile:e {:RESULT = e;:}
@@ -171,7 +171,7 @@ instruction ::=  		decl:e {:RESULT = e;:}
 						| formalAssign:e {:RESULT = e;:}
 						| arrayAssign:e {:RESULT = e;:}
 						| array:e {::}
-						| if {::}
+						| if:e {:RESULT = e;:}
 						| while:e {:RESULT = e;:}
 						| for:e {:RESULT = e;:}
 						| doWhile:e {:RESULT = e;:}
@@ -246,7 +246,7 @@ elseifA ::= 			elseifA:e1 elseifAA:e2 {:RESULT = mp.elseOperacion(e1, e2);:}
 						| elseifAA:e {:RESULT = e;:}
 						;
 
-elseifAA ::= 			ELSIF:e1 OPEN_BRK opBol:e2 CLOSE_BRK elseifAA1:e3 {:mp.elseIfOperacion(e2, e3, e2left, e2right);:}
+elseifAA ::= 			ELSIF:e1 OPEN_BRK opBol:e2 CLOSE_BRK elseifAA1:e3 {:RESULT = mp.elseIfOperacion(e2, e3, e2left, e2right);System.out.println("ELSE");:}
 						;
 
 elseifAA1 ::= 			instruction:e {:RESULT = e;:}
@@ -533,5 +533,23 @@ PRINT["ALGO"];
 ]
 %%%
 MAIN
+
+void x ()[
+IF (10 < 3)[
+PRINT["ALGO"];
+]
+]
+%%%MAIN
+
+void x ()[
+IF (20 > 3)[
+] ELSIF (20 < 3)[
+] ELSIF (4 != 5)
+PRINT["ALGO"]; 
+ELSIF (4 == 5)
+PRINT["ALGO2"];
+]
+%%%
+MAIN 
 
 */
