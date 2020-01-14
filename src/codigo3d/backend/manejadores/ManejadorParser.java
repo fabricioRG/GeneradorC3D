@@ -7,6 +7,9 @@ package codigo3d.backend.manejadores;
 
 import codigo3d.backend.objetos.*;
 import codigo3d.backend.parseractions.*;
+import java.io.FileWriter;
+import java.io.IOException;
+import java.io.PrintWriter;
 import java.util.LinkedList;
 import java.util.Stack;
 import java_cup.runtime.Symbol;
@@ -214,6 +217,10 @@ public class ManejadorParser {
         return new SimboloBuilder().lexema(text).token(TablaTipos.getInstance().getString()).build();
     }
 
+    public Simbolo getSimbolError(String text) {
+        return new SimboloBuilder().lexema(text).token(TablaTipos.getInstance().getError()).build();
+    }
+
     public Simbolo getSimbolString(String text, int fila, int columna) {
         return new SimboloBuilder().lexema(text).token(TablaTipos.getInstance().getString()).fila(fila).columna(columna).build();
     }
@@ -337,18 +344,31 @@ public class ManejadorParser {
         return sim1;
     }
 
+    public Cuarteto getTerminalDeclaration(String name, Tipo tipo) {
+        String nameTerminal = "";
+        if (!global) {
+            nameTerminal = getLocalName(name);
+        } else {
+            nameTerminal = name;
+        }
+        return new CuartetoBuilder().operador(DECLARATION).resultado(new SimboloBuilder().lexema(nameTerminal).token(tipo).build()).build();
+    }
+
     public Cuarteto getSumaConcatenacion(Cuarteto sim2, String plus, Cuarteto sim1) throws Exception {
         if (TablaTipos.getInstance().isString(sim1.getResultado().getToken())
                 || TablaTipos.getInstance().isString(sim2.getResultado().getToken())) {
+            Cuarteto terminal = getTerminalDeclaration(getResult(), TablaTipos.getInstance().getString());
             return new CuartetoBuilder().operador(plus).operando1(sim2.getResultado()).
-                    operando2(sim1.getResultado()).resultado(getSimbolString(getResult())).siguiente(setAtLast(sim1, sim2)).build();
-        } else if (TablaTipos.getInstance().isBoolean(sim1.getResultado().getToken())
-                || TablaTipos.getInstance().isBoolean(sim2.getResultado().getToken())) {
-            throw new Exception("Concatenacion erronea entre booleano");
+                    operando2(sim1.getResultado()).resultado(terminal.getResultado()).auxiliar(terminal).siguiente(setAtLast(sim1, sim2)).build();
+        } else if (TablaTipos.getInstance().isNumber(sim1.getResultado().getToken())
+                && TablaTipos.getInstance().isNumber(sim2.getResultado().getToken())) {
+            Cuarteto terminal = getTerminalDeclaration(getResult(), getTipo(sim1.getResultado(), sim2.getResultado()));
+            return new CuartetoBuilder().operador(plus).operando1(sim2.getResultado()).
+                    operando2(sim1.getResultado()).resultado(terminal.getResultado()).auxiliar(terminal).siguiente(setAtLast(sim1, sim2)).build();
         } else {
-            Simbolo simResult = new SimboloBuilder().lexema(getResult()).token(getTipo(sim1.getResultado(), sim2.getResultado())).build();
+            Cuarteto terminal = getTerminalDeclaration(getResult(), TablaTipos.getInstance().getString());
             return new CuartetoBuilder().operador(plus).operando1(sim2.getResultado()).
-                    operando2(sim1.getResultado()).resultado(simResult).siguiente(setAtLast(sim1, sim2)).build();
+                    operando2(sim1.getResultado()).resultado(getSimbolError(terminal.getResultado().getLexema())).auxiliar(terminal).siguiente(setAtLast(sim1, sim2)).build();
         }
     }
 
@@ -356,9 +376,9 @@ public class ManejadorParser {
         if (isNotTypeNumber(sim1.getResultado().getToken(), sim2.getResultado().getToken())) {
             throw new Exception("Multiplicacion " + SALTO_LN + getInvalidSimbol(sim2.getResultado(), sim1.getResultado(), ERROR_NUM));
         } else {
-            Simbolo simResult = new SimboloBuilder().lexema(getResult()).token(getTipo(sim1.getResultado(), sim2.getResultado())).build();
+            Cuarteto terminal = getTerminalDeclaration(getResult(), getTipo(sim1.getResultado(), sim2.getResultado()));
             return new CuartetoBuilder().operador(multi).operando1(sim2.getResultado()).
-                    operando2(sim1.getResultado()).resultado(simResult).siguiente(setAtLast(sim1, sim2)).build();
+                    operando2(sim1.getResultado()).resultado(terminal.getResultado()).auxiliar(terminal).siguiente(setAtLast(sim1, sim2)).build();
         }
     }
 
@@ -366,9 +386,9 @@ public class ManejadorParser {
         if (isNotTypeNumber(sim1.getResultado().getToken(), sim2.getResultado().getToken())) {
             throw new Exception("Division ( / )" + SALTO_LN + getInvalidSimbol(sim2.getResultado(), sim1.getResultado(), ERROR_NUM));
         } else {
-            Simbolo simResult = new SimboloBuilder().lexema(getResult()).token(getTipo(sim1.getResultado(), sim2.getResultado())).build();
+            Cuarteto terminal = getTerminalDeclaration(getResult(), getTipo(sim1.getResultado(), sim2.getResultado()));
             return new CuartetoBuilder().operador(division).operando1(sim2.getResultado()).
-                    operando2(sim1.getResultado()).resultado(simResult).siguiente(setAtLast(sim1, sim2)).build();
+                    operando2(sim1.getResultado()).resultado(terminal.getResultado()).auxiliar(terminal).siguiente(setAtLast(sim1, sim2)).build();
         }
     }
 
@@ -376,9 +396,9 @@ public class ManejadorParser {
         if (isNotTypeNumber(sim1.getResultado().getToken(), sim2.getResultado().getToken())) {
             throw new Exception("Resta ( - )" + SALTO_LN + getInvalidSimbol(sim2.getResultado(), sim1.getResultado(), ERROR_NUM));
         } else {
-            Simbolo simResult = new SimboloBuilder().lexema(getResult()).token(getTipo(sim1.getResultado(), sim2.getResultado())).build();
+            Cuarteto terminal = getTerminalDeclaration(getResult(), getTipo(sim1.getResultado(), sim2.getResultado()));
             return new CuartetoBuilder().operador(minus).operando1(sim2.getResultado()).
-                    operando2(sim1.getResultado()).resultado(simResult).siguiente(setAtLast(sim1, sim2)).build();
+                    operando2(sim1.getResultado()).resultado(terminal.getResultado()).auxiliar(terminal).siguiente(setAtLast(sim1, sim2)).build();
         }
     }
 
@@ -386,9 +406,9 @@ public class ManejadorParser {
         if (isNotTypeNumber(sim1.getResultado().getToken(), sim2.getResultado().getToken())) {
             throw new Exception("Modulo ( % )" + SALTO_LN + getInvalidSimbol(sim2.getResultado(), sim1.getResultado(), ERROR_NUM));
         } else {
-            Simbolo simResult = new SimboloBuilder().lexema(getResult()).token(getTipo(sim1.getResultado(), sim2.getResultado())).build();
+            Cuarteto terminal = getTerminalDeclaration(getResult(), getTipo(sim1.getResultado(), sim2.getResultado()));
             return new CuartetoBuilder().operador(module).operando1(sim2.getResultado()).
-                    operando2(sim1.getResultado()).resultado(simResult).siguiente(setAtLast(sim1, sim2)).build();
+                    operando2(sim1.getResultado()).resultado(terminal.getResultado()).auxiliar(terminal).siguiente(setAtLast(sim1, sim2)).build();
         }
     }
 
@@ -528,23 +548,65 @@ public class ManejadorParser {
         }
     }
 
-    public Cuarteto orderOpNum(Cuarteto operacion) {
-        Stack<Cuarteto> pila = new Stack<>();
-        Cuarteto i = operacion;
-        while (i != null) {
-            pila.push(i);
-            i = i.getSiguiente();
+    public Cuarteto orderOpNum(Cuarteto operacion, int fila, int columna) throws Exception {
+        if (!TablaTipos.getInstance().isError(operacion.getResultado().getToken())) {
+            Stack<Cuarteto> pila = new Stack<>();
+            Cuarteto i = operacion;
+            while (i != null) {
+                pila.push(i);
+                if (TablaTipos.getInstance().isError(operacion.getResultado().getToken())) {
+                    i.getResultado().setToken(TablaTipos.getInstance().getString());
+                }
+                i = i.getSiguiente();
+            }
+            Cuarteto j = pila.pop();
+            Cuarteto k = j;
+            Cuarteto h = null;
+            while (!pila.empty()) {
+                h = pila.pop();
+                k.setSiguiente(h);
+                k = h;
+            }
+            k.setSiguiente(null);
+            Cuarteto head = j;
+            Cuarteto l = j;
+            Cuarteto m;
+            Cuarteto n = null;
+            Cuarteto actual;
+            Cuarteto anterior = null;
+            if (j.getAuxiliar() != null) {
+                head = j.getAuxiliar();
+            }
+            while (l != null) {
+                if (l.getAuxiliar() != null) {
+                    m = l.getAuxiliar();
+                    actual = l;
+                    if (isDeclaration(m.getOperador()) || isArraDeclaration(m.getOperador())) {
+                        if (m.getSiguiente() != null) {
+                            n = m.getSiguiente();
+                        }
+                        l.setAuxiliar(n);
+                        m.setSiguiente(actual);
+                        if (anterior != null) {
+                            anterior.setSiguiente(m);
+                        }
+                    }
+                }
+                anterior = l;
+                l = l.getSiguiente();
+            }
+            return head;
+        } else {
+            throw new Exception("Concatenacion en expresion" + SALTO_LN + getValorInfo(new SimboloBuilder().columna(columna).fila(fila).build()));
         }
-        Cuarteto j = pila.pop();
-        Cuarteto k = j;
-        Cuarteto h = null;
-        while (!pila.empty()) {
-            h = pila.pop();
-            k.setSiguiente(h);
-            k = h;
-        }
-        k.setSiguiente(null);
-        return j;
+    }
+
+    private boolean isDeclaration(String operador) {
+        return operador.equals(DECLARATION);
+    }
+
+    private boolean isArraDeclaration(String operador) {
+        return operador.equals(ARRAY_DECLARATION);
     }
 
     public Cuarteto getSimplePrint(Cuarteto sim, String print) {
@@ -675,9 +737,9 @@ public class ManejadorParser {
     }
 
     public Cuarteto getArrayPosition(Cuarteto array) {
-        Simbolo simResult = new SimboloBuilder().lexema(getResult()).token(array.getResultado().getToken()).build();
-        return new CuartetoBuilder().operador(ARRAY).resultado(simResult).componentes(array.getComponentes())
-                .operando1(array.getResultado()).operando2(array.getOperando1()).build();
+        Cuarteto terminal = getTerminalDeclaration(getResult(), array.getResultado().getToken());
+        return new CuartetoBuilder().operador(ARRAY).resultado(terminal.getResultado()).componentes(array.getComponentes())
+                .operando1(array.getResultado()).operando2(array.getOperando1()).auxiliar(terminal).build();
     }
 
     private Cuarteto getOneDimension(Cuarteto dimensiones, Simbolo array) throws Exception {
@@ -711,12 +773,16 @@ public class ManejadorParser {
         }
 //        getLastCuarteto(tamanoAnterior).setSiguiente(posicionAnterior);
 //        getLastCuarteto(tamanoAnterior).setSiguiente(orderOpNum(resultadoAnterior));
-        getLastCuarteto(posicionAnterior).setSiguiente(orderOpNum(resultadoAnterior));
+        getLastCuarteto(posicionAnterior).setSiguiente(orderOpNum(resultadoAnterior, 0, 0));
         return posicionAnterior;
     }
 
-    public void addSubprogramInstruction(Cuarteto instruction) {
-        tablaSimbolos.addSubprogramEstructura(instruction, subprogramaActual);
+    public void addSubprogramInstruction(Tipo tipo, Cuarteto parametros, Cuarteto body) {
+        if(parametros != null){
+            tablaSimbolos.addSubprogramEstructura(parametros, subprogramaActual);
+        } else {
+            tablaSimbolos.addSubprogramEstructura(body, subprogramaActual);
+        }
     }
 
     public void setSubprogramReturn(boolean valorReturn) {
@@ -735,7 +801,7 @@ public class ManejadorParser {
         Simbolo sim = getSubprogram(subprogramaActual);
         if (!TablaTipos.getInstance().isVoid(sim.getToken())) {
             if (TablaTipos.getInstance().isCompatible(last.getResultado().getToken(), sim.getToken())) {
-                return new CuartetoBuilder().operador(RETURN).resultado(last.getResultado()).componentes(expresion).build();
+                return new CuartetoBuilder().operador(RETURN).operando1(getLastCuarteto(expresion).getResultado()).resultado(last.getResultado()).componentes(expresion).build();
             } else {
                 throw new Exception("Return en subprograma" + SALTO_LN + getInvalidAsign(sim, last.getResultado().getToken()));
             }
@@ -749,11 +815,12 @@ public class ManejadorParser {
     public Cuarteto getSubprogramCall(String var, Cuarteto params, int fila, int columna) throws Exception {
         if (existSubprogram(var)) {
             Simbolo subprograma = getSubprogram(var);
-            Simbolo result = new SimboloBuilder().lexema(getResult()).token(subprograma.getToken()).build();
+            Cuarteto terminal = getTerminalDeclaration(getResult(), subprograma.getToken());
             subprograma.setLexema(var);
             Cuarteto parametros = compareSubprogramParams(subprograma.getParametros(), params, fila, columna, subprogramaActual);
-            return new CuartetoBuilder().operador(SUBPROGRAM_CALL).resultado(result)
-                    .operando1(subprograma).componentes(params).auxiliar(parametros).build();
+            terminal.setSiguiente(parametros);
+            return new CuartetoBuilder().operador(SUBPROGRAM_CALL).resultado(terminal.getResultado())
+                    .operando1(subprograma).componentes(params).auxiliar(terminal).build();
         } else {
             throw new Exception("Llamada de subprograma" + SALTO_LN
                     + getValorInfo(new SimboloBuilder().lexema(var).fila(fila).columna(columna).build())
@@ -862,34 +929,53 @@ public class ManejadorParser {
         }
     }
 
-    public Cuarteto asignByToken(Cuarteto sim, Cuarteto expresion, int fila, int columna) throws Exception {
+    public Cuarteto asignByToken(Cuarteto sim, Cuarteto expresion, boolean declaration, int fila, int columna) throws Exception {
         Cuarteto last = getLastCuarteto(expresion);
         if (TablaTipos.getInstance().isCompatible(last.getResultado().getToken(), sim.getResultado().getToken())) {
             String asign = ASSIGN;
             if (TablaTipos.getInstance().isBoolean(sim.getResultado().getToken())) {
                 asign = ASSIGN_BOOL;
             }
-            return new CuartetoBuilder().operador(asign).componentes(expresion).
+
+            getLastCuarteto(expresion).setSiguiente(getCuartetoString(sim.getResultado().getLexema(), fila, columna));
+            Cuarteto result = new CuartetoBuilder().operador(asign).componentes(expresion).
                     operando1(last.getResultado()).resultado(sim.getResultado()).build();
+            if (declaration) {
+                sim.setOperador(DECLARATION);
+            }
+            return setAtLast(sim, result);
         } else {
             throw new Exception("Asignacion de valor en variable" + SALTO_LN + getInvalidAsign(sim.getResultado(), last.getResultado().getToken()));
         }
-        /*if (existSimbol(token)) {
-            sim = tablaSimbolos.getSimbol(token);
-            last = getLastCuarteto(expresion);
-            if (TablaTipos.getInstance().isCompatible(last.getResultado().getToken(), sim.getToken())) {
-                String asign = ASSIGN;
-                if (TablaTipos.getInstance().isBoolean(sim.getToken())) {
-                    asign = ASSIGN_BOOL;
-                }
-                return new CuartetoBuilder().operador(asign).componentes(expresion).
-                        operando1(last.getResultado()).resultado(sim).build();
-            } else {
-                throw new Exception("Variable " + token + " no es compatible con expresion de tipo " + expresion.getResultado().getToken().getNombre());
-            }
+    }
+
+    public Cuarteto getDeclaration(String var) {
+        Simbolo result = null;
+        if (!global) {
+            result = tablaSimbolos.getLocalVariable(var, subprogramaActual);
+            result.setLexema(getLocalName(var));
         } else {
-            throw new Exception("Variable <" + token + "> no existente o no declarada");
-        }*/
+            result = tablaSimbolos.getGlobalVariable(var);
+            result.setLexema(var);
+        }
+        return new CuartetoBuilder().operador(DECLARATION).resultado(result).build();
+    }
+    
+    public Cuarteto getArrayDeclaration(String var) {
+        Simbolo result = null;
+        if (!global) {
+            result = tablaSimbolos.getLocalVariable(var, subprogramaActual);
+            result.setLexema(getLocalName(var));
+        } else {
+            result = tablaSimbolos.getGlobalVariable(var);
+            result.setLexema(var);
+        }
+        return new CuartetoBuilder().operador(ARRAY_DECLARATION).resultado(result).build();
+    }
+
+    public void setDeclarationSubprogram(String var) {
+        Simbolo result = tablaSimbolos.getLocalVariable(var, subprogramaActual);
+        tablaSimbolos.addSubprogramEstructura(getTerminalDeclaration(var, result.getToken()), subprogramaActual);
     }
 
     public Cuarteto getSimpleArrayAsign(String text) {
@@ -987,8 +1073,11 @@ public class ManejadorParser {
     }
 
     public Cuarteto ifOperacion(Cuarteto ifA, Cuarteto ifB) {
-        setAtLast(ifA, ifB);
-        setResultadoAllIfElse(ifA, getLastCuarteto(ifB).getResultado());
+        if (ifB != null) {
+            setAtLast(ifA, ifB);
+            setResultadoAllIfElse(ifA, getLastCuarteto(ifB).getResultado());
+        }
+        getLastCuarteto(ifA).setAuxiliar(new CuartetoBuilder().build());
         return ifA;
     }
 
@@ -1027,7 +1116,8 @@ public class ManejadorParser {
     }
 
     public Cuarteto elseOperacion(Cuarteto instructions, int fila, int columna) {
-        return new CuartetoBuilder().operador(ELSE).resultado(getSimbolString(getSimpleEtiqueta())).componentes(instructions).build();
+        return new CuartetoBuilder().operador(ELSE).operando1(getSimbolString(setEtiquetaResult(getEtiqueta())))
+                .resultado(getSimbolString(setEtiquetaResult(getSimpleEtiqueta()))).componentes(instructions).build();
     }
 
     public Cuarteto whileOperacion(String whil, Cuarteto restriccion, Cuarteto instructions, int fila, int columna) throws Exception {
@@ -1078,16 +1168,16 @@ public class ManejadorParser {
             Cuarteto last = getLastCuarteto(opBol);
             Cuarteto instruccion = null;
             Cuarteto num = getCuartetoNum(getSimbolEntero(entero, 0, 0));
-            Simbolo simResult = new SimboloBuilder().lexema(getResult()).token(getTipo(num.getResultado(), num.getResultado())).build();
+            Cuarteto terminal = getTerminalDeclaration(getResult(), getTipo(num.getResultado(), num.getResultado()));
             if (signo.equals(PLUS)) {
-                instruccion = new CuartetoBuilder().operador(PLUS).operando1(asignacion.getResultado()).operando2(num.getResultado()).resultado(simResult).build();
+                instruccion = new CuartetoBuilder().operador(PLUS).operando1(asignacion.getResultado()).operando2(num.getResultado()).resultado(terminal.getResultado()).build();
             } else if (signo.equals(MINUS)) {
-                instruccion = new CuartetoBuilder().operador(MINUS).operando1(asignacion.getResultado()).operando2(num.getResultado()).resultado(simResult).build();
+                instruccion = new CuartetoBuilder().operador(MINUS).operando1(asignacion.getResultado()).operando2(num.getResultado()).resultado(terminal.getResultado()).build();
             }
-            Cuarteto asign = asignByToken(asignacion, instruccion, fila, columna);
+            Cuarteto asign = asignByToken(asignacion, instruccion, false, fila, columna);
             etiquetaResult = getEtiqueta();
             Cuarteto result = new CuartetoBuilder().operador(FOR).operando1(last.getOperando2()).
-                    operando2(opBol.getOperando1()).resultado(last.getResultado()).componentes(instructions).restriccion(asign).build();
+                    operando2(opBol.getOperando1()).resultado(last.getResultado()).componentes(instructions).auxiliar(terminal).restriccion(asign).build();
             setOperadorAll(opBol, CICLO);
             setAtLast(opBol, result);
             return setAtLast(asignacion, opBol);
@@ -1110,13 +1200,26 @@ public class ManejadorParser {
         }
     }
 
-    public void print(Cuarteto bodyInstruction, Cuarteto mainInstruction) {
+    public void print(Cuarteto bodyInstruction, Cuarteto mainInstruction) throws IOException {
+        isCode3D = true;
+        isCodeC = false;
         if (bodyInstruction != null) {
             printBodyInstruction(bodyInstruction);
         }
-        if (mainInstruction != null) {
-            printMainInstruction(mainInstruction);
+        printMainInstruction(mainInstruction);
+
+        isCode3D = false;
+        isCodeC = true;
+        fileWriter = new FileWriter(PATH_FILE);
+        printWriter = new PrintWriter(fileWriter);
+        printWriter.println(LIBRARIES_VALUE);
+        printWriter.println(OPEN_MAIN);
+        if (bodyInstruction != null) {
+            printBodyInstruction(bodyInstruction);
         }
+        printMainInstruction(mainInstruction);
+        printWriter.print(CLOSE_MAIN);
+        printWriter.close();
     }
 
     public boolean isOperadorRelacional(String rel) {
@@ -1240,12 +1343,42 @@ public class ManejadorParser {
                 case VAR_BOOL:
                     printVarBool(cuarteto);
                     break;
+                case DECLARATION:
+                    printDeclaration(cuarteto);
+                    break;
+                case ARRAY_DECLARATION:
+                    printArrayDeclaration(cuarteto);
+                    break;
             }
+        }
+    }
+    
+    private void printArrayDeclaration(Cuarteto sim){
+        if(isCodeC){
+            println(sim.getResultado().getToken().getNombre() + SPACE + getResult(sim.getResultado()) 
+                    + OPEN_SQR + ARRAY_SIZE + CLOSE_SQR + SEMICOLON);
         }
     }
 
     private String getEtiquetaPrint(Simbolo sim) {
-        return sim.getLexema() + COLON;
+        if (isCode3D) {
+            return sim.getLexema() + COLON;
+        } else {
+            return currentTerminal + sim.getLexema() + COLON;
+        }
+    }
+
+    private String getResult(Simbolo sim) {
+        if (sim != null) {
+            return currentTerminal + sim.getLexema();
+        } else {
+            return currentTerminal;
+        }
+    }
+
+    private String getEtiquetaPrint(Cuarteto sim) {
+        Simbolo last = getLastCuarteto(sim).getResultado();
+        return last.getLexema() + last.getFila() + sim.getOperando1().getLexema() + COLON;
     }
 
     private String getIf(String condicion) {
@@ -1253,221 +1386,540 @@ public class ManejadorParser {
     }
 
     private void printBodyInstruction(Cuarteto sim) {
-        print(sim);
+        if (isCode3D) {
+            print(sim);
+        }
+        if (isCodeC) {
+            print(sim);
+        }
     }
 
     private void printMainInstruction(Cuarteto sim) {
+        if (isCode3D) {
+            println(getEtiquetaPrint(new SimboloBuilder().lexema(MAIN_VALUE).build()));
+            print(sim);
+            printReturn(new CuartetoBuilder().build());
+        }
+        if (isCodeC) {
+            print(sim);
+            printReturn(new CuartetoBuilder().build());
+        }
+    }
 
+    private void printDeclaration(Cuarteto sim) {
+        if (isCodeC) {
+            println(sim.getResultado().getToken().getNombre() + SPACE + getResult(sim.getResultado()) + SEMICOLON);
+        }
     }
 
     private void printVarBool(Cuarteto sim) {
-        print(getIf(sim.getResultado().getLexema() + EQUAL + TRUE));
+        if (isCode3D) {
+            print(getIf(sim.getResultado() + EQUAL + TRUE));
+        }
+        if (isCodeC) {
+            print(getIf(getResult(sim.getResultado()) + EQUAL + TRUE));
+        }
     }
 
     private void printBool(Cuarteto sim) {
-        if (isTrue(sim.getResultado())) {
-            print(getIf(TRUE + EQUAL + TRUE));
-        } else if (isFalse(sim.getResultado())) {
-            print(getIf(FALSE + EQUAL + TRUE));
+        if (isCode3D) {
+            if (isTrue(sim.getResultado())) {
+                print(getIf(TRUE + EQUAL + TRUE));
+            } else if (isFalse(sim.getResultado())) {
+                print(getIf(FALSE + EQUAL + TRUE));
+            }
+        }
+        if (isCodeC) {
+            if (isTrue(sim.getResultado())) {
+                print(getIf(TRUE + EQUAL + TRUE));
+            } else if (isFalse(sim.getResultado())) {
+                print(getIf(FALSE + EQUAL + TRUE));
+            }
         }
     }
 
     private void printOperacion(Cuarteto sim) {
-        println(sim.getResultado().getLexema() + SPACE + SIGN_EQUAL + SPACE + sim.getOperando1().getLexema()
-                + SPACE + sim.getOperador() + SPACE + sim.getOperando2().getLexema());
+        if (isCode3D) {
+            println(sim.getResultado().getLexema() + SPACE + SIGN_EQUAL + SPACE + sim.getOperando1().getLexema()
+                    + SPACE + sim.getOperador() + SPACE + sim.getOperando2().getLexema());
+        }
+        if (isCodeC) {
+            println(getResult(sim.getResultado()) + SPACE + SIGN_EQUAL + SPACE + getResult(sim.getOperando1())
+                    + SPACE + sim.getOperador() + SPACE + getResult(sim.getOperando2()) + SEMICOLON);
+        }
     }
 
     private void printRel(Cuarteto sim) {
-        print(sim.getSiguiente());
-        print(getIf(sim.getResultado().getLexema()));
+        if (isCode3D) {
+            print(sim.getSiguiente());
+            print(getIf(sim.getResultado().getLexema()));
+        }
+        if (isCodeC) {
+            print(sim.getSiguiente());
+            print(getIf(sim.getResultado().getLexema()));
+        }
     }
 
     private void printPrint(Cuarteto sim) {
-        print(sim.getComponentes());
-        if (TablaTipos.getInstance().isBoolean(sim.getResultado().getToken())) {
-            if (sim.getResultado().getLexema().equals(TRUE_VAL)) {
-                println(PRINT + SPACE + TRUE);
-            } else if (sim.getResultado().getLexema().equals(FALSE_VAL)) {
-                println(PRINT + SPACE + FALSE);
+        if (isCode3D) {
+            print(sim.getComponentes());
+            if (TablaTipos.getInstance().isBoolean(sim.getResultado().getToken())) {
+                if (sim.getResultado().getLexema().equals(TRUE_VAL)) {
+                    println(PRINT + SPACE + TRUE);
+                } else if (sim.getResultado().getLexema().equals(FALSE_VAL)) {
+                    println(PRINT + SPACE + FALSE);
+                }
+            } else {
+                println(PRINT + SPACE + sim.getResultado().getLexema());
             }
-        } else {
-            println(PRINT + SPACE + sim.getResultado().getLexema());
+        }
+        if (isCodeC) {
+            print(sim.getComponentes());
+            if (TablaTipos.getInstance().isBoolean(sim.getResultado().getToken())) {
+                if (sim.getResultado().getLexema().equals(TRUE_VAL)) {
+                    println(PRINT_AB + SPACE + TRUE + SEMICOLON);
+                } else if (sim.getResultado().getLexema().equals(FALSE_VAL)) {
+                    println(PRINT_AB + SPACE + FALSE + SEMICOLON);
+                }
+            } else {
+                if (sim.getComponentes().getResultado().getCategoria() != null) {
+                    if (tablaSimbolos.isVariable(sim.getComponentes().getResultado().getCategoria())) {
+                        println(PRINT_AB + SPACE + getResult(sim.getResultado()) + SEMICOLON);
+                    } else {
+                        println(PRINT_AB + SPACE + sim.getResultado().getLexema() + SEMICOLON);
+                    }
+                } else {
+                    println(PRINT_AB + SPACE + sim.getResultado().getLexema() + SEMICOLON);
+                }
+            }
         }
     }
 
     private void printPrintln(Cuarteto sim) {
-        print(sim.getComponentes());
-        if (TablaTipos.getInstance().isBoolean(sim.getResultado().getToken())) {
-            if (sim.getResultado().getLexema().equals(TRUE_VAL)) {
-                println(PRINTLN + SPACE + TRUE);
-            } else if (sim.getResultado().getLexema().equals(FALSE_VAL)) {
-                println(PRINTLN + SPACE + FALSE);
+        if (isCode3D) {
+            print(sim.getComponentes());
+            if (TablaTipos.getInstance().isBoolean(sim.getResultado().getToken())) {
+                if (sim.getResultado().getLexema().equals(TRUE_VAL)) {
+                    println(PRINTLN + SPACE + TRUE);
+                } else if (sim.getResultado().getLexema().equals(FALSE_VAL)) {
+                    println(PRINTLN + SPACE + FALSE);
+                }
+            } else {
+                println(PRINTLN + SPACE + sim.getResultado().getLexema());
             }
-        } else {
-            println(PRINTLN + SPACE + sim.getResultado().getLexema());
+        }
+        if (isCodeC) {
+            print(sim.getComponentes());
+            if (TablaTipos.getInstance().isBoolean(sim.getResultado().getToken())) {
+                if (sim.getResultado().getLexema().equals(TRUE_VAL)) {
+                    println(PRINT_AB + SPACE + TRUE + PRINT_CE + SEMICOLON);
+                } else if (sim.getResultado().getLexema().equals(FALSE_VAL)) {
+                    println(PRINT_AB + SPACE + FALSE + PRINT_CE + SEMICOLON);
+                }
+            } else {
+                println(PRINT_AB + SPACE + getResult(sim.getResultado()) + PRINT_CE + SEMICOLON);
+            }
         }
     }
 
     private void printScanString(Cuarteto sim) {
-        print(sim.getComponentes());
-        if (sim.getOperando1() != null) {
-            println(SCAN_VALUE + SPACE + sim.getResultado().getLexema() + OPEN_SQR + sim.getOperando1().getLexema() + CLOSE_SQR);
-        } else {
-            println(SCAN_VALUE + SPACE + sim.getResultado().getLexema());
+        if (isCode3D) {
+            print(sim.getComponentes());
+            if (sim.getOperando1() != null) {
+                println(SCAN_VALUE + SPACE + sim.getResultado().getLexema() + OPEN_SQR + sim.getOperando1().getLexema() + CLOSE_SQR);
+            } else {
+                println(SCAN_VALUE + SPACE + sim.getResultado().getLexema());
+            }
+        }
+        if (isCodeC) {
+            print(sim.getComponentes());
+            if (sim.getOperando1() != null) {
+                println(SCAN_AB + SPACE + getResult(sim.getResultado()) + OPEN_SQR + sim.getOperando1().getLexema() + CLOSE_SQR + SEMICOLON);
+            } else {
+                println(SCAN_AB + SPACE + getResult(sim.getResultado()) + SEMICOLON);
+            }
         }
     }
 
     private void printScanNumber(Cuarteto sim) {
-        print(sim.getComponentes());
-        if (sim.getOperando1() != null) {
-            println(SCAN_VALUE + SPACE + sim.getResultado().getLexema() + OPEN_SQR + sim.getOperando1().getLexema() + CLOSE_SQR);
-        } else {
-            println(SCAN_VALUE + SPACE + sim.getResultado().getLexema());
+        if (isCode3D) {
+            print(sim.getComponentes());
+            if (sim.getOperando1() != null) {
+                println(SCAN_VALUE + SPACE + sim.getResultado().getLexema() + OPEN_SQR + sim.getOperando1().getLexema() + CLOSE_SQR);
+            } else {
+                println(SCAN_VALUE + SPACE + sim.getResultado().getLexema());
+            }
+        }
+        if (isCodeC) {
+            print(sim.getComponentes());
+            if (sim.getOperando1() != null) {
+                println(SCAN_AB + SPACE + getResult(sim.getResultado()) + OPEN_SQR + sim.getOperando1().getLexema() + CLOSE_SQR + SEMICOLON);
+            } else {
+                println(SCAN_AB + SPACE + getResult(sim.getResultado()) + SEMICOLON);
+            }
         }
     }
 
     private void printCiclo(Cuarteto sim) {
-        println(getEtiquetaPrint(sim.getOperando1()));
-        if (sim.getComponentes() != null) {
-            print(sim.getComponentes());
-        }
-        printInstruction(sim.getRestriccion());
-        if (sim.getAuxiliar() != null) {
-            if (isNot(sim.getAuxiliar().getResultado().getLexema())) {
-                println(GOTO + sim.getResultado().getLexema());
-                println(GOTO + sim.getOperando2().getLexema());
+        if (isCode3D) {
+            println(getEtiquetaPrint(sim.getOperando1()));
+            if (sim.getComponentes() != null) {
+                print(sim.getComponentes());
+            }
+            printInstruction(sim.getRestriccion());
+            if (sim.getAuxiliar() != null) {
+                if (isNot(sim.getAuxiliar().getResultado().getLexema())) {
+                    println(GOTO + sim.getResultado().getLexema());
+                    println(GOTO + sim.getOperando2().getLexema());
+                } else {
+                    println(GOTO + sim.getOperando2().getLexema());
+                    println(GOTO + sim.getResultado().getLexema());
+                }
             } else {
                 println(GOTO + sim.getOperando2().getLexema());
                 println(GOTO + sim.getResultado().getLexema());
             }
-        } else {
-            println(GOTO + sim.getOperando2().getLexema());
-            println(GOTO + sim.getResultado().getLexema());
+        }
+        if (isCodeC) {
+            println(getEtiquetaPrint(sim.getOperando1()));
+            if (sim.getComponentes() != null) {
+                print(sim.getComponentes());
+            }
+            printInstruction(sim.getRestriccion());
+            if (sim.getAuxiliar() != null) {
+                if (isNot(sim.getAuxiliar().getResultado().getLexema())) {
+                    println(GOTO + getResult(sim.getResultado()) + SEMICOLON);
+                    println(GOTO + getResult(sim.getOperando2()) + SEMICOLON);
+                } else {
+                    println(GOTO + getResult(sim.getOperando2()) + SEMICOLON);
+                    println(GOTO + getResult(sim.getResultado()) + SEMICOLON);
+                }
+            } else {
+                println(GOTO + getResult(sim.getOperando2()) + SEMICOLON);
+                println(GOTO + getResult(sim.getResultado()) + SEMICOLON);
+            }
         }
         //println(RETURN_VALUE);
     }
 
     private void printAsign(Cuarteto sim) {
-        print(sim.getComponentes());
-        println(sim.getResultado().getLexema() + SPACE + SIGN_EQUAL + SPACE + sim.getOperando1().getLexema());
+        if (isCode3D) {
+            print(sim.getComponentes());
+            println(sim.getResultado().getLexema() + SPACE + SIGN_EQUAL + SPACE + sim.getOperando1().getLexema());
+        }
+        if (isCodeC) {
+            print(sim.getComponentes());
+            println(getResult(sim.getResultado()) + SPACE + SIGN_EQUAL + SPACE + getResult(sim.getOperando1()) + SEMICOLON);
+        }
     }
 
     private void printAsignBool(Cuarteto sim) {
-        print(sim.getComponentes());
-        if (isTrue(sim.getOperando1())) {
-            println(sim.getResultado().getLexema() + SPACE + SIGN_EQUAL + SPACE + TRUE);
-        } else if (isFalse(sim.getOperando1())) {
-            println(sim.getResultado().getLexema() + SPACE + SIGN_EQUAL + SPACE + FALSE);
-        } else {
-            println(sim.getResultado().getLexema() + SPACE + SIGN_EQUAL + SPACE + sim.getOperando1().getLexema());
+        if (isCode3D) {
+            print(sim.getComponentes());
+            if (isTrue(sim.getOperando1())) {
+                println(sim.getResultado().getLexema() + SPACE + SIGN_EQUAL + SPACE + TRUE);
+            } else if (isFalse(sim.getOperando1())) {
+                println(sim.getResultado().getLexema() + SPACE + SIGN_EQUAL + SPACE + FALSE);
+            } else {
+                println(sim.getResultado().getLexema() + SPACE + SIGN_EQUAL + SPACE + sim.getOperando1().getLexema());
+            }
+        }
+        if (isCodeC) {
+            print(sim.getComponentes());
+            if (isTrue(sim.getOperando1())) {
+                println(getResult(sim.getResultado()) + SPACE + SIGN_EQUAL + SPACE + TRUE + SEMICOLON);
+            } else if (isFalse(sim.getOperando1())) {
+                println(getResult(sim.getResultado()) + SPACE + SIGN_EQUAL + SPACE + FALSE + SEMICOLON);
+            } else {
+                println(getResult(sim.getResultado()) + SPACE + SIGN_EQUAL + SPACE + sim.getOperando1().getLexema() + SEMICOLON);
+            }
         }
     }
 
     private void printIf(Cuarteto sim) {
-        println(getEtiquetaPrint(sim.getOperando1()));
-        print(sim.getComponentes());
-        println(GOTO + SPACE + sim.getResultado().getLexema());
+        if (isCode3D) {
+            println(getEtiquetaPrint(sim.getOperando1()));
+            print(sim.getComponentes());
+            println(GOTO + SPACE + sim.getResultado().getLexema());
+            if (sim.getAuxiliar() != null) {
+                println(getEtiquetaPrint(sim.getResultado()));
+            }
+        }
+        if (isCodeC) {
+            println(getEtiquetaPrint(sim.getOperando1()));
+            print(sim.getComponentes());
+            println(GOTO + SPACE + getResult(sim.getResultado()) + SEMICOLON);
+            if (sim.getAuxiliar() != null) {
+                println(getEtiquetaPrint(sim.getResultado()));
+            }
+        }
     }
 
     private void printElseIf(Cuarteto sim) {
-        println(getEtiquetaPrint(sim.getOperando1()));
-        print(sim.getComponentes());
-        println(GOTO + SPACE + sim.getResultado().getLexema());
+        if (isCode3D) {
+            println(getEtiquetaPrint(sim.getOperando1()));
+            print(sim.getComponentes());
+            println(GOTO + SPACE + sim.getResultado().getLexema());
+            if (sim.getAuxiliar() != null) {
+                println(getEtiquetaPrint(sim.getResultado()));
+            }
+        }
+        if (isCodeC) {
+            println(getEtiquetaPrint(sim.getOperando1()));
+            print(sim.getComponentes());
+            println(GOTO + SPACE + getResult(sim.getResultado()) + SEMICOLON);
+            if (sim.getAuxiliar() != null) {
+                println(getEtiquetaPrint(sim.getResultado()));
+            }
+        }
     }
 
     private void printElse(Cuarteto sim) {
-
+        if (isCode3D) {
+            println(getEtiquetaPrint(sim.getOperando1()));
+            print(sim.getComponentes());
+            println(GOTO + SPACE + sim.getResultado().getLexema());
+            println(getEtiquetaPrint(sim.getResultado()));
+        }
+        if (isCodeC) {
+            println(getEtiquetaPrint(sim.getOperando1()));
+            print(sim.getComponentes());
+            println(GOTO + SPACE + getResult(sim.getResultado()) + SEMICOLON);
+            println(getEtiquetaPrint(sim.getResultado()));
+        }
     }
 
     private void printWhile(Cuarteto sim) {
-        println(getEtiquetaPrint(sim.getOperando1()));
-        print(sim.getComponentes());
-        println(GOTO + sim.getOperando2().getLexema());
-        //println(RETURN_VALUE);
-        println(getEtiquetaPrint(sim.getResultado()));
-        //println(RETURN_VALUE);
+        if (isCode3D) {
+            println(getEtiquetaPrint(sim.getOperando1()));
+            print(sim.getComponentes());
+            println(GOTO + sim.getOperando2().getLexema());
+            //println(RETURN_VALUE);
+            println(getEtiquetaPrint(sim.getResultado()));
+            //println(RETURN_VALUE);
+        }
+        if (isCodeC) {
+            println(getEtiquetaPrint(sim.getOperando1()));
+            print(sim.getComponentes());
+            println(GOTO + getResult(sim.getOperando2()) + SEMICOLON);
+            //println(RETURN_VALUE);
+            println(getEtiquetaPrint(sim.getResultado()));
+            //println(RETURN_VALUE);
+        }
     }
 
     private void printFor(Cuarteto sim) {
-        println(getEtiquetaPrint(sim.getOperando1()));
-        print(sim.getRestriccion());
-        print(sim.getComponentes());
-        println(GOTO + sim.getOperando2().getLexema());
-        println(getEtiquetaPrint(sim.getResultado()));
-        println(RETURN_VALUE);
+        if (isCode3D) {
+            println(getEtiquetaPrint(sim.getOperando1()));
+            print(sim.getRestriccion());
+            print(sim.getComponentes());
+            println(GOTO + sim.getOperando2().getLexema());
+            println(getEtiquetaPrint(sim.getResultado()));
+            println(RETURN_VALUE);
+        }
+        if (isCodeC) {
+            println(getEtiquetaPrint(sim.getOperando1()));
+            print(sim.getRestriccion());
+            print(sim.getComponentes());
+            println(GOTO + getResult(sim.getOperando2()) + SEMICOLON);
+            println(getEtiquetaPrint(sim.getResultado()));
+            //println(RETURN_VALUE);
+        }
     }
 
     private void printDo(Cuarteto sim) {
-        println(getEtiquetaPrint(sim.getOperando1()));
-        println(GOTO + sim.getOperando2().getLexema());
-        println(getEtiquetaPrint(sim.getResultado()));
-        println(RETURN_VALUE);
+        if (isCode3D) {
+            println(getEtiquetaPrint(sim.getOperando1()));
+            println(GOTO + sim.getOperando2().getLexema());
+            println(getEtiquetaPrint(sim.getResultado()));
+            println(RETURN_VALUE);
+        }
+        if (isCodeC) {
+            println(getEtiquetaPrint(sim.getOperando1()));
+            println(GOTO + getResult(sim.getOperando2()) + SEMICOLON);
+            println(getEtiquetaPrint(sim.getResultado()));
+            //println(RETURN_VALUE);
+        }
     }
 
     private void printArrayPosition(Cuarteto sim) {
-        printLista(sim.getOperando1().getDimensiones());
-        print(sim.getComponentes());
-        println(sim.getResultado().getLexema() + SPACE + SIGN_EQUAL + SPACE + sim.getOperando1().getLexema()
-                + SPACE + OPEN_SQR + sim.getOperando2().getLexema() + CLOSE_SQR);
+        if (isCode3D) {
+            printLista(sim.getOperando1().getDimensiones());
+            print(sim.getComponentes());
+            println(sim.getResultado().getLexema() + SPACE + SIGN_EQUAL + SPACE + sim.getOperando1().getLexema()
+                    + SPACE + OPEN_SQR + sim.getOperando2().getLexema() + CLOSE_SQR);
+        }
+        if (isCodeC) {
+            printLista(sim.getOperando1().getDimensiones());
+            print(sim.getComponentes());
+            if(sim.getOperando1().getAmbito() == 0){
+                println(sim.getResultado().getLexema() + SPACE + SIGN_EQUAL + SPACE + sim.getOperando1().getLexema()
+                    + SPACE + OPEN_SQR + getResult(sim.getOperando2()) + CLOSE_SQR);
+            } else {
+                println(sim.getResultado().getLexema() + SPACE + SIGN_EQUAL + SPACE + getResult(sim.getOperando1())
+                    + SPACE + OPEN_SQR + getResult(sim.getOperando2()) + CLOSE_SQR);
+            }
+        }
     }
 
     private void printArrayAsign(Cuarteto sim) {
-        printLista(sim.getOperando1().getDimensiones());
-        print(sim.getAuxiliar().getComponentes());
-        print(sim.getComponentes());
-        if (isTrue(sim.getResultado()) || isFalse(sim.getResultado())) {
-            println(sim.getOperando1().getLexema() + SPACE + OPEN_SQR + sim.getAuxiliar().getOperando1().getLexema() + CLOSE_SQR
-                    + SPACE + SIGN_EQUAL + SPACE + getValueTrueOrFalse(sim.getResultado().getLexema()));
-        } else {
-            println(sim.getOperando1().getLexema() + SPACE + OPEN_SQR + sim.getAuxiliar().getOperando1().getLexema() + CLOSE_SQR
-                    + SPACE + SIGN_EQUAL + SPACE + sim.getResultado().getLexema());
+        if (isCode3D) {
+            printLista(sim.getOperando1().getDimensiones());
+            print(sim.getAuxiliar().getComponentes());
+            print(sim.getComponentes());
+            if (isTrue(sim.getResultado()) || isFalse(sim.getResultado())) {
+                println(sim.getOperando1().getLexema() + SPACE + OPEN_SQR + sim.getAuxiliar().getOperando1().getLexema() + CLOSE_SQR
+                        + SPACE + SIGN_EQUAL + SPACE + getValueTrueOrFalse(sim.getResultado().getLexema()));
+            } else {
+                println(sim.getOperando1().getLexema() + SPACE + OPEN_SQR + sim.getAuxiliar().getOperando1().getLexema() + CLOSE_SQR
+                        + SPACE + SIGN_EQUAL + SPACE + sim.getResultado().getLexema());
+            }
+        }
+        if (isCodeC) {
+            printLista(sim.getOperando1().getDimensiones());
+            print(sim.getAuxiliar().getComponentes());
+            print(sim.getComponentes());
+            if (isTrue(sim.getResultado()) || isFalse(sim.getResultado())) {
+                println(sim.getOperando1().getLexema() + SPACE + OPEN_SQR + sim.getAuxiliar().getOperando1().getLexema() + CLOSE_SQR
+                        + SPACE + SIGN_EQUAL + SPACE + getValueTrueOrFalse(sim.getResultado().getLexema()));
+            } else {
+                println(sim.getOperando1().getLexema() + SPACE + OPEN_SQR + sim.getAuxiliar().getOperando1().getLexema() + CLOSE_SQR
+                        + SPACE + SIGN_EQUAL + SPACE + sim.getResultado().getLexema());
+            }
         }
     }
 
     private void printLista(LinkedList<Cuarteto> cuartetos) {
-        cuartetos.forEach((cuarteto) -> {
-            print(cuarteto);
-        });
+        if (isCode3D) {
+            cuartetos.forEach((cuarteto) -> {
+                print(cuarteto);
+            });
+        }
+        if (isCodeC) {
+            cuartetos.forEach((cuarteto) -> {
+                print(cuarteto);
+            });
+        }
     }
 
     private void printSubprogram(Cuarteto sim) {
-        println(getEtiquetaPrint(sim.getOperando2()));
-        print(sim.getComponentes());
+        if (isCode3D) {
+            println(getEtiquetaPrint(sim.getOperando2()));
+            print(sim.getComponentes());
+        }
+        if (isCodeC) {
+            //println(getEtiquetaPrint(sim.getOperando2()));
+            //print(sim.getComponentes());
+        }
     }
 
     private void printSubprogramCall(Cuarteto sim) {
-        int size = 0;
-        if (sim.getComponentes() != null) {
-            Cuarteto componentes = sim.getComponentes();
-            Cuarteto parametros = sim.getAuxiliar();
-            while (componentes != null) {
-                print(componentes.getComponentes());
-                componentes = componentes.getSiguiente();
-                size++;
+        if (isCode3D) {
+            int size = 0;
+            if (sim.getComponentes() != null) {
+                Cuarteto componentes = sim.getComponentes();
+                Cuarteto parametros = sim.getAuxiliar();
+                while (componentes != null) {
+                    print(componentes.getComponentes());
+                    componentes = componentes.getSiguiente();
+                    size++;
+                }
+                print(parametros);
             }
-            print(parametros);
+            println(sim.getResultado().getLexema() + SPACE + SIGN_EQUAL + SPACE + CALL + SPACE + sim.getOperando1().getLexema() + COMMA + SPACE + size);
         }
-        println(sim.getResultado().getLexema() + SPACE + SIGN_EQUAL + SPACE + CALL + SPACE + sim.getOperando1().getLexema() + COMMA + SPACE + size);
+        if (isCodeC) {
+            currentTerminal = getLastCuarteto(sim).getResultado().getLexema() + getLastCuarteto(sim).getResultado().getFila();
+            terminalResult = sim.getResultado().getLexema();
+            if (sim.getOperando1() != null) {
+                Simbolo operando1 = sim.getOperando1();
+                Cuarteto result = null;
+                if (!operando1.getEstructura().isEmpty()) {
+                    result = operando1.getEstructura().get(0);
+                }
+                Cuarteto actual = null;
+                Cuarteto componente = sim.getComponentes();
+                while (componente != null) {
+                    print(componente.getComponentes());
+                    componente = componente.getSiguiente();
+                }
+                if (!operando1.getParametros().isEmpty()) {
+                    actual = sim.getAuxiliar();
+                    int contador = 0;
+                    while (result != null) {
+                        if (contador < operando1.getNoParametros()) {
+                            printDeclaration(result);
+                            printParametro(new CuartetoBuilder().resultado(actual.getResultado()).operando1(result.getResultado()).build());
+                            actual = actual.getSiguiente();
+                        } else {
+                            printInstruction(result);
+                        }
+                        result = result.getSiguiente();
+                        contador++;
+                    }
+                } else {
+                    if(!operando1.getEstructura().isEmpty()){
+                        print(operando1.getEstructura().get(0));
+                    }
+                }
+                if (!operando1.getEstructura().isEmpty()) {
+                }
+            }
+            currentTerminal = "";
+            /*int size = 0;
+            if (sim.getComponentes() != null) {
+                Cuarteto componentes = sim.getComponentes();
+                Cuarteto parametros = sim.getAuxiliar();
+                while (componentes != null) {
+                    print(componentes.getComponentes());
+                    componentes = componentes.getSiguiente();
+                    size++;
+                }
+                print(parametros);
+            }*/
+            //println(sim.getResultado().getLexema() + SPACE + SIGN_EQUAL + SPACE + CALL + SPACE + sim.getOperando1().getLexema() + COMMA + SPACE + size);
+        }
     }
 
     private void printReturn(Cuarteto sim) {
-        print(sim.getComponentes());
-        if (sim.getResultado() != null) {
-            if (isTrue(sim.getResultado()) || isFalse(sim.getResultado())) {
-                println(RETURN_VALUE + SPACE + getValueTrueOrFalse(sim.getResultado().getLexema()));
+        if (isCode3D) {
+            print(sim.getComponentes());
+            if (sim.getResultado() != null) {
+                if (isTrue(sim.getResultado()) || isFalse(sim.getResultado())) {
+                    println(RETURN_VALUE + SPACE + getValueTrueOrFalse(sim.getResultado().getLexema()));
+                } else {
+                    println(RETURN_VALUE + SPACE + sim.getResultado().getLexema());
+                }
             } else {
-                println(RETURN_VALUE + SPACE + sim.getResultado().getLexema());
+                println(RETURN_VALUE);
             }
-        } else {
-            println(RETURN_VALUE);
+        }
+        if (isCodeC) {
+            print(sim.getComponentes());
+            if (sim.getResultado() != null) {
+                if (isTrue(sim.getResultado()) || isFalse(sim.getResultado())) {
+                    println(terminalResult + SPACE + SIGN_EQUAL + SPACE + getValueTrueOrFalse(sim.getResultado().getLexema()) + SEMICOLON);
+                } else {
+                    println(terminalResult + SPACE + SIGN_EQUAL + SPACE + getResult(sim.getResultado()) + SEMICOLON);
+                }
+            }
         }
     }
 
     private void printParametro(Cuarteto sim) {
-        if (isTrue(sim.getResultado()) || isFalse(sim.getResultado())) {
-            println(PARAM_VALUE + SPACE + getValueTrueOrFalse(sim.getResultado().getLexema()));
-        } else {
-            println(PARAM_VALUE + SPACE + sim.getResultado().getLexema());
+        if (isCode3D) {
+            if (isTrue(sim.getResultado()) || isFalse(sim.getResultado())) {
+                println(PARAM_VALUE + SPACE + getValueTrueOrFalse(sim.getResultado().getLexema()));
+            } else {
+                println(PARAM_VALUE + SPACE + sim.getResultado().getLexema());
+            }
+        }
+        if (isCodeC) {
+            if (isTrue(sim.getResultado()) || isFalse(sim.getResultado())) {
+                println(sim.getOperando1().getLexema() + SPACE + SIGN_EQUAL + SPACE + getValueTrueOrFalse(sim.getResultado().getLexema()) + SEMICOLON);
+            } else {
+                println(sim.getOperando1().getLexema() + SPACE + SIGN_EQUAL + SPACE + sim.getResultado().getLexema() + SEMICOLON);
+            }
         }
     }
 
@@ -1480,11 +1932,22 @@ public class ManejadorParser {
     }
 
     private void print(String print) {
-        manejadorAreaTexto.printTerminal(print);
+        if (isCode3D) {
+            manejadorAreaTexto.printTerminal(print);
+        }
+        if (isCodeC) {
+            printWriter.print(print);
+        }
+
     }
 
     private void println(String print) {
-        manejadorAreaTexto.printTerminal(print + SALTO_LN);
+        if (isCode3D) {
+            manejadorAreaTexto.printTerminal(print + SALTO_LN);
+        }
+        if (isCodeC) {
+            printWriter.println(print);
+        }
     }
 
     public void printError(String error) throws Exception {
@@ -1577,7 +2040,7 @@ public class ManejadorParser {
         return tablaSimbolos.existSimbol(var);
     }
 
-    public Cuarteto getSubprograma(String name, Cuarteto body) {
+    public Cuarteto getSubprograma(String name, Cuarteto params, Cuarteto body) {
         if (TablaTipos.getInstance().isVoid(tablaSimbolos.getSubprogram(name).getToken())) {
             if (body != null) {
                 getLastCuarteto(body).setSiguiente(getVoidReturn());
@@ -1585,8 +2048,13 @@ public class ManejadorParser {
                 body = getVoidReturn();
             }
         }
+        if (params != null) {
+            getLastCuarteto(params).setSiguiente(body);
+        } else {
+            params = body;
+        }
         return new CuartetoBuilder().operador(SUBPROGRAM).operando2(getSimbolString(name))
-                .resultado(tablaSimbolos.getSubprogram(name)).componentes(body).build();
+                .resultado(tablaSimbolos.getSubprogram(name)).componentes(params).build();
     }
 
     private Cuarteto getVoidReturn() {
@@ -1599,6 +2067,10 @@ public class ManejadorParser {
 
     public void setGlobal(boolean global) {
         this.global = global;
+    }
+
+    private boolean isSubprogram(String operador) {
+        return operador.equals(SUBPROGRAM);
     }
 
     //public void setEtiqueta
@@ -1655,12 +2127,15 @@ public class ManejadorParser {
     public final static String CLOSE_SQR = "]";
     public final static String COLON = ":";
     public final static String COMMA = ",";
+    public final static String SEMICOLON = ";";
     public final static String T = "t";
     public final static String ETQ = "et";
     public final static String ARRAY = "ARRAY";
     public final static String ARRAY_ASIGN = "ARRAY<-";
     public final static String PRINT = "PRINT";
     public final static String PRINTLN = "PRINTLN";
+    public final static String PRINT_AB = "cout <<";
+    public final static String PRINT_CE = "<< endl";
     public final static String SCANS = "SCANS";
     public final static String SCANN = "SCANN";
     public final static String SCAN_VALUE = "scan";
@@ -1669,6 +2144,7 @@ public class ManejadorParser {
     public final static String IF = "IF";
     public final static String ELSEIF = "ELSEIF";
     public final static String ELSE = "ELSE";
+    public final static String FINAL_IF = "FINAL_IF";
     public final static String WHILE = "WHILE";
     public final static String FOR = "FOR";
     public final static String DO = "DO";
@@ -1687,9 +2163,14 @@ public class ManejadorParser {
     public final static String PARAM_VALUE = "param";
     public final static String CALL = "call";
     public final static String SUBPROGRAM = "SUBPROGRAM";
+    public final static String MAIN_VALUE = "MAIN";
     public final static String RETURN = "RETURN";
     public final static String RETURN_VALUE = "return";
     public final static String SCAN = "SCAN";
+    public final static String SCAN_AB = "cin >> ";
+    public final static String DECLARATION = "DECLARATION";
+    public final static String ARRAY_DECLARATION = "ARRAY_DECLARATION";
+    public final static String ARRAY_SIZE = "N";
     public final static String LOWER_EQ = "<=";
     public final static String HIGHER_EQ = ">=";
     public final static String LOWER = "<";
@@ -1709,6 +2190,9 @@ public class ManejadorParser {
     public final static int VAR_LOCAL = 2;
     public final static int PARAMETRO = 3;
     public final static int SUBPROGRAMA = 4;
+    public final static String LIBRARIES_VALUE = "#include <iostream> \n#include <string>\n#define N 256 \nusing namespace std;";
+    public final static String OPEN_MAIN = "int main(){";
+    public final static String CLOSE_MAIN = "\nreturn 0;\n}";
     /*private AccionParser acciones = null;
     private AsignadorValores asignador = null;
     private DeclaradorValores declarador = null;
@@ -1727,4 +2211,11 @@ public class ManejadorParser {
     private String errorSintactico = null;
     public boolean global = true;
     private boolean noError = true;
+    private boolean isCode3D = false;
+    private boolean isCodeC = false;
+    private String currentTerminal = "";
+    private String terminalResult = "";
+    FileWriter fileWriter;
+    PrintWriter printWriter;
+    public final static String PATH_FILE = "./CodigoC.cpp";
 }

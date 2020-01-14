@@ -3056,7 +3056,7 @@ mp.printSintaxError("Error array posicion");
 		int eleft = ((java_cup.runtime.Symbol)CUP$parser2$stack.peek()).left;
 		int eright = ((java_cup.runtime.Symbol)CUP$parser2$stack.peek()).right;
 		Cuarteto e = (Cuarteto)((java_cup.runtime.Symbol) CUP$parser2$stack.peek()).value;
-		RESULT = mp.orderOpNum(e);
+		RESULT = mp.orderOpNum(e, eleft, eright);
               CUP$parser2$result = parser.getSymbolFactory().newSymbol("opNum2",58, ((java_cup.runtime.Symbol)CUP$parser2$stack.peek()), ((java_cup.runtime.Symbol)CUP$parser2$stack.peek()), RESULT);
             }
           return CUP$parser2$result;

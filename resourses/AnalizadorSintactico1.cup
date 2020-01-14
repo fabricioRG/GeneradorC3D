@@ -95,14 +95,14 @@ bodyInstructionA ::=	subprogram:e {:RESULT = e;:}
 subprogram ::= 			tipo:e1 
 						VARIABLE:e2 {:mp.setSubprogramaActual(e2); mp.setGlobal(false);mp.setResultSubprogramActual(mp.getSubprogramResult());:}
 						parametrosA:e3
-						bodySubprogram:e4 {:mp.verificateSubprogram();RESULT = mp.getSubprograma(e2, e4);mp.setGlobal(true);:}
+						bodySubprogram:e4 {:mp.verificateSubprogram();RESULT = mp.getSubprograma(e2, e3, e4);mp.addSubprogramInstruction(e1, e3, e4); mp.setGlobal(true);:}
 						;
 
 programInstruction ::= 	programInstruction:e1 programInstructionA:e2 {:RESULT = mp.getInstructions(e1, e2);:}
 						| programInstructionA:e {:RESULT = e;:}
 						;
 
-programInstructionA ::= programInstructionB:e {:RESULT = e;mp.addSubprogramInstruction(e);:}
+programInstructionA ::= programInstructionB:e {:RESULT = e;:}
 						;
 
 programInstructionB ::=	formalAssign:e {:RESULT = e;:}
@@ -132,15 +132,15 @@ paramsProgram ::= 		paramsProgram:e1 COMMA opNum:e2 {:RESULT = mp.getComponentes
 rtrn ::=				RETURN opNum:e SEMICOLON {:RESULT = mp.getReturn(e, eleft, eright);:}
 						;
 
-parametrosA ::= 		OPEN_BRK CLOSE_BRK
-						| OPEN_BRK parametros CLOSE_BRK
+parametrosA ::= 		OPEN_BRK CLOSE_BRK {::}
+						| OPEN_BRK parametros:e CLOSE_BRK {:RESULT = e;:}
 						;
 
-parametros ::= 			parametros:e1 COMMA parametro:e2 
-						| parametro:e 
+parametros ::= 			parametros:e1 COMMA parametro:e2 {:RESULT = mp.getInstructions(e1, e2);:}
+						| parametro:e {:RESULT = e;:}
 						;
 
-parametro ::= 			tipo:e1 VARIABLE:e2 
+parametro ::= 			tipo:e1 VARIABLE:e2 {:RESULT = mp.getDeclaration(e2);:}
 						;
 
 bodySubprogram ::= 		OPEN_SQR declns:e1 SEPARATOR programInstruction:e2 CLOSE_SQR {:RESULT = mp.getInstructions(e1, e2);:}
@@ -149,12 +149,12 @@ bodySubprogram ::= 		OPEN_SQR declns:e1 SEPARATOR programInstruction:e2 CLOSE_SQ
 						| OPEN_SQR CLOSE_SQR {::}
 						;
 
-declns ::= 				declns:e1 declns1:e2 
-						| declns1:e 
+declns ::= 				declns:e1 declns1:e2 {:RESULT = mp.getInstructions(e1, e2);:}
+						| declns1:e {:RESULT = e;:}
 						;
 
 declns1 ::=				decl:e {:RESULT = e;:}
-						| array:e {::}
+						| array:e {:RESULT = e;:}
 						;
 
 instructions ::= 		instructions:e1 instruction:e2 {:RESULT = mp.getInstructions(e1,e2);:}
@@ -164,13 +164,13 @@ instructions ::= 		instructions:e1 instruction:e2 {:RESULT = mp.getInstructions(
 instructionB ::= 		decl:e {:RESULT = e;:}
 						| formalAssign:e {:RESULT = e;:}
 						| arrayAssign:e {:RESULT = e;:}
-						| array:e {::}
+						| array:e {:RESULT = e;:}
 						;
 
 instruction ::=  		decl:e {:RESULT = e;:}
 						| formalAssign:e {:RESULT = e;:}
 						| arrayAssign:e {:RESULT = e;:}
-						| array:e {::}
+						| array:e {:RESULT = e;:}
 						| if:e {:RESULT = e;:}
 						| while:e {:RESULT = e;:}
 						| for:e {:RESULT = e;:}
@@ -190,10 +190,10 @@ decls ::= 				decls:e1 COMMA decl1:e2 {:RESULT = mp.getInstructions(e1, e2);:}
 						;
 
 decl1 ::= 				assign2:e {:RESULT = e;:}
-						| VARIABLE:e {::}
+						| VARIABLE:e {:RESULT = mp.getDeclaration(e);:}
 						;
 
-assign2 ::= 			assign3:e1 exp:e2 {:RESULT = mp.asignByToken(e1,e2, e1left, e1right);:}
+assign2 ::= 			assign3:e1 exp:e2 {:RESULT = mp.asignByToken(e1,e2, true, e1left, e1right);:}
 						;
 
 assign3 ::= 			VARIABLE:e ASSIGN {:RESULT = mp.getVariable(e, eleft, eright);:}
@@ -213,11 +213,11 @@ arrayDimen ::= 			arrayDimen:e1 arrayDimen1:e2 {::}
 arrayDimen1 ::= 		OPEN_SQR opNum2:e CLOSE_SQR {::}
 						;
 
-array ::= 				ARRAY tipo:e1 arrayDimen:e2 assignA:e3 SEMICOLON {::}
+array ::= 				ARRAY tipo:e1 arrayDimen:e2 assignA:e3 SEMICOLON {:RESULT = e3;:}
 						;
 
-assignA ::= 			assignA:e1 COMMA VARIABLE:e2 {::}
-						| VARIABLE:e {::}
+assignA ::= 			assignA:e1 COMMA VARIABLE:e2 {:RESULT = mp.getInstructions(e1, mp.getArrayDeclaration(e2));:}
+						| VARIABLE:e {:RESULT = mp.getArrayDeclaration(e);:}
 						;
 
 arrayAssign ::= 		arrayPosition:e1 ASSIGN exp:e2 SEMICOLON {:RESULT = mp.setArrayAsign(e1,e2);:}
@@ -227,7 +227,7 @@ arrayPosition ::= 		VARIABLE:e1 arrayDim:e2 {:RESULT = mp.getArrayPosition(e1, e
 						;
 
 if ::= 					if1:e1 ifA:e2 {:RESULT = mp.ifOperacion(e1, e2);:}
-						| if1:e {:RESULT = e;:}
+						| if1:e {:RESULT = mp.ifOperacion(e, null);:}
 						;
 
 if1 ::= 				IF:e1 {:mp.setEtiquetaResult(mp.getEtiqueta());:} OPEN_BRK opBol:e2 CLOSE_BRK if2:e3 {:RESULT = mp.ifOperacion(e2, e3, e2left, e2right);:}
@@ -246,7 +246,7 @@ elseifA ::= 			elseifA:e1 elseifAA:e2 {:RESULT = mp.elseOperacion(e1, e2);:}
 						| elseifAA:e {:RESULT = e;:}
 						;
 
-elseifAA ::= 			ELSIF:e1 OPEN_BRK opBol:e2 CLOSE_BRK elseifAA1:e3 {:RESULT = mp.elseIfOperacion(e2, e3, e2left, e2right);System.out.println("ELSE");:}
+elseifAA ::= 			ELSIF:e1 OPEN_BRK opBol:e2 CLOSE_BRK elseifAA1:e3 {:RESULT = mp.elseIfOperacion(e2, e3, e2left, e2right);:}
 						;
 
 elseifAA1 ::= 			instruction:e {:RESULT = e;:}
@@ -315,7 +315,7 @@ signo ::= 				PLUS:e {:RESULT = e;:}
 formalAssign ::= 		assign:e SEMICOLON {:RESULT = e;:}
 						;
 
-assign ::= 				assign1:e1 exp:e2 {:RESULT = mp.asignByToken(e1,e2, e1left, e1right);:}
+assign ::= 				assign1:e1 exp:e2 {:RESULT = mp.asignByToken(e1,e2, false, e1left, e1right);:}
 
 						;
 
@@ -325,7 +325,7 @@ assign1 ::= 			VARIABLE:e ASSIGN {:RESULT = mp.getVariable(e, eleft, eright);:}
 exp ::= 				opNum:e {:RESULT = e;:}
 						;
 
-opNum2 ::= 				ex2:e {:RESULT = mp.orderOpNum(e);:}
+opNum2 ::= 				ex2:e {:RESULT = mp.orderOpNum(e, eleft, eright);:}
 						;
 
 ex2 ::= 				ex2:e1 MULTI:e2 ex2:e3 {:RESULT = mp.getMulti(e1, e2, e3);:}
@@ -342,7 +342,7 @@ ex2 ::= 				ex2:e1 MULTI:e2 ex2:e3 {:RESULT = mp.getMulti(e1, e2, e3);:}
 						| subprogramCall:e {:RESULT = e;:}
 						;
 
-opNum ::= 				ex:e {:RESULT = mp.orderOpNum(e);:}
+opNum ::= 				ex:e {:RESULT = mp.orderOpNum(e, eleft, eright);:}
 						;
 
 ex ::= 					ex:e1 MULTI:e2 ex:e3 {:RESULT = mp.getMulti(e1, e2, e3);:}
@@ -392,7 +392,7 @@ rel ::= 				HIGHER:e {:RESULT = e;:}
 						| EQUAL:e {:RESULT = e;:}
 						;
 
-expRel ::= 				er:e {:RESULT = mp.orderOpNum(e);:}
+expRel ::= 				er:e {:RESULT = mp.orderOpNum(e, eleft, eright);:}
 						;
 
 er ::= 					er:e1 MULTI:e2 er:e3 {:RESULT = mp.getMulti(e1, e2, e3);:}
@@ -577,5 +577,104 @@ i <- i + 1;
 
 ]
 %%%MAIN
+
+void x ()[
+IF (20 > 3)[
+] ELSIF (20 < 3)[
+] ELSIF (4 != 5)
+PRINT["ALGO"]; 
+ELSIF (4 == 5)
+PRINT["ALGO2"];
+PRINT["ALGOMAS"];
+IF (20 == 2)[
+PRINT["FINAL IF"];
+WHILE( TRUE)[
+PRINT["WHILE"];
+]
+]
+PRINT["ALGO12"];
+]
+%%%
+MAIN 
+
+void x ()[
+IF (20 < 30)[
+PRINT["20", "+", " 30"];
+]
+]
+%%%MAIN
+
+int suma (int a, int b)[
+return a + b;
+]
+void x ()[
+int x, y, z, i;
+ARRAY int [20+7][20][30] array1;
+%%%
+i <- 0;
+WHILE (array1[x +1][y+1][z+1] > y)[
+PRINT[x,y,z, 2 + 3];
+x <- suma(array1[x][y][z], i);
+i <- i + 1;
+]
+
+]
+%%%
+MAIN()[
+int y, x <- 20;
+y <- suma(y+x, x+30);
+]
+
+void x ()[
+int x, y <- 20;
+%%%
+x <- 20;
+IF (10 < 3)[
+PRINT["ALGO"];
+]
+]
+%%%MAIN
+
+
+int suma (int a, int b)[
+int x, y;
+%%%
+PRINT["SUMA"];
+x <- 20 + 2 * 4;
+return 10;
+]
+%%%
+MAIN()[
+int x;
+x <- suma (10, 10);
+]	
+
+int suma (int a, int b)[
+int x, y;
+%%%
+PRINT["SUMA"];
+x <- 20 + 2 * 4;
+WHILE(x > 20)[
+PRINT[x];
+]
+return 10;
+]
+%%%
+MAIN()[
+int x;
+x <- suma (10, 10);
+]	
+
+ARRAY int [10-3][20%2][30-2] array;
+int x ()[
+int x;
+%%%
+x <- array [2-4][5*4][4-2];
+return 10;
+]
+%%%
+MAIN()[
+int x <- x();
+]
 
 */

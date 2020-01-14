@@ -8,7 +8,7 @@ import java.util.HashMap;
  */
 public class TablaTipos {
 
-    public final static String[] TIPOS = {"boolean", "char", "byte", "int", "long", "float", "double", "string", "void"};
+    public final static String[] TIPOS = {"boolean", "char", "byte", "int", "long", "float", "double", "string", "void", "error"};
     public final int BOOLEAN = 0;
     public final int CHAR = 1;
     public final int BYTE = 2;
@@ -18,6 +18,7 @@ public class TablaTipos {
     public final int DOUBLE = 6;
     public final int STRING = 7;
     public final int VOID = 8;
+    public final int ERROR = 9;
 
     private HashMap<String, Tipo> tipos = null;
     private static TablaTipos INSTANCE = null;
@@ -93,7 +94,15 @@ public class TablaTipos {
     public Tipo getVoid() {
         return TablaTipos.getInstance().getTipoByKey(TIPOS[VOID]);
     }
+    
+    public Tipo getError(){
+       return TablaTipos.getInstance().getTipoByKey(TIPOS[ERROR]);
+    }
 
+    public boolean isError(Tipo token){
+        return token.getNombre().equals(TIPOS[ERROR]);
+    }
+    
     public boolean isVoid(Tipo token) {
         return token.getNombre().equals(TIPOS[VOID]);
     }

@@ -1143,7 +1143,7 @@ mp.setSubprogramaActual(e2); mp.setGlobal(false);mp.setResultSubprogramActual(mp
 		int e4left = ((java_cup.runtime.Symbol)CUP$parser$stack.peek()).left;
 		int e4right = ((java_cup.runtime.Symbol)CUP$parser$stack.peek()).right;
 		Cuarteto e4 = (Cuarteto)((java_cup.runtime.Symbol) CUP$parser$stack.peek()).value;
-		mp.verificateSubprogram();RESULT = mp.getSubprograma(e2, e4);mp.setGlobal(true);
+		mp.verificateSubprogram();RESULT = mp.getSubprograma(e2, e3, e4);mp.addSubprogramInstruction(e1, e3, e4); mp.setGlobal(true);
               CUP$parser$result = parser.getSymbolFactory().newSymbol("subprogram",69, ((java_cup.runtime.Symbol)CUP$parser$stack.elementAt(CUP$parser$top-4)), ((java_cup.runtime.Symbol)CUP$parser$stack.peek()), RESULT);
             }
           return CUP$parser$result;
@@ -1182,7 +1182,7 @@ mp.setSubprogramaActual(e2); mp.setGlobal(false);mp.setResultSubprogramActual(mp
 		int eleft = ((java_cup.runtime.Symbol)CUP$parser$stack.peek()).left;
 		int eright = ((java_cup.runtime.Symbol)CUP$parser$stack.peek()).right;
 		Cuarteto e = (Cuarteto)((java_cup.runtime.Symbol) CUP$parser$stack.peek()).value;
-		RESULT = e;mp.addSubprogramInstruction(e);
+		RESULT = e;
               CUP$parser$result = parser.getSymbolFactory().newSymbol("programInstructionA",5, ((java_cup.runtime.Symbol)CUP$parser$stack.peek()), ((java_cup.runtime.Symbol)CUP$parser$stack.peek()), RESULT);
             }
           return CUP$parser$result;
@@ -1398,7 +1398,7 @@ mp.setSubprogramaActual(e2); mp.setGlobal(false);mp.setResultSubprogramActual(mp
           case 36: // parametrosA ::= OPEN_BRK CLOSE_BRK 
             {
               Cuarteto RESULT =null;
-
+		
               CUP$parser$result = parser.getSymbolFactory().newSymbol("parametrosA",71, ((java_cup.runtime.Symbol)CUP$parser$stack.elementAt(CUP$parser$top-1)), ((java_cup.runtime.Symbol)CUP$parser$stack.peek()), RESULT);
             }
           return CUP$parser$result;
@@ -1407,7 +1407,10 @@ mp.setSubprogramaActual(e2); mp.setGlobal(false);mp.setResultSubprogramActual(mp
           case 37: // parametrosA ::= OPEN_BRK parametros CLOSE_BRK 
             {
               Cuarteto RESULT =null;
-
+		int eleft = ((java_cup.runtime.Symbol)CUP$parser$stack.elementAt(CUP$parser$top-1)).left;
+		int eright = ((java_cup.runtime.Symbol)CUP$parser$stack.elementAt(CUP$parser$top-1)).right;
+		Cuarteto e = (Cuarteto)((java_cup.runtime.Symbol) CUP$parser$stack.elementAt(CUP$parser$top-1)).value;
+		RESULT = e;
               CUP$parser$result = parser.getSymbolFactory().newSymbol("parametrosA",71, ((java_cup.runtime.Symbol)CUP$parser$stack.elementAt(CUP$parser$top-2)), ((java_cup.runtime.Symbol)CUP$parser$stack.peek()), RESULT);
             }
           return CUP$parser$result;
@@ -1422,7 +1425,7 @@ mp.setSubprogramaActual(e2); mp.setGlobal(false);mp.setResultSubprogramActual(mp
 		int e2left = ((java_cup.runtime.Symbol)CUP$parser$stack.peek()).left;
 		int e2right = ((java_cup.runtime.Symbol)CUP$parser$stack.peek()).right;
 		Cuarteto e2 = (Cuarteto)((java_cup.runtime.Symbol) CUP$parser$stack.peek()).value;
-
+		RESULT = mp.getInstructions(e1, e2);
               CUP$parser$result = parser.getSymbolFactory().newSymbol("parametros",70, ((java_cup.runtime.Symbol)CUP$parser$stack.elementAt(CUP$parser$top-2)), ((java_cup.runtime.Symbol)CUP$parser$stack.peek()), RESULT);
             }
           return CUP$parser$result;
@@ -1434,7 +1437,7 @@ mp.setSubprogramaActual(e2); mp.setGlobal(false);mp.setResultSubprogramActual(mp
 		int eleft = ((java_cup.runtime.Symbol)CUP$parser$stack.peek()).left;
 		int eright = ((java_cup.runtime.Symbol)CUP$parser$stack.peek()).right;
 		Cuarteto e = (Cuarteto)((java_cup.runtime.Symbol) CUP$parser$stack.peek()).value;
-
+		RESULT = e;
               CUP$parser$result = parser.getSymbolFactory().newSymbol("parametros",70, ((java_cup.runtime.Symbol)CUP$parser$stack.peek()), ((java_cup.runtime.Symbol)CUP$parser$stack.peek()), RESULT);
             }
           return CUP$parser$result;
@@ -1449,7 +1452,7 @@ mp.setSubprogramaActual(e2); mp.setGlobal(false);mp.setResultSubprogramActual(mp
 		int e2left = ((java_cup.runtime.Symbol)CUP$parser$stack.peek()).left;
 		int e2right = ((java_cup.runtime.Symbol)CUP$parser$stack.peek()).right;
 		String e2 = (String)((java_cup.runtime.Symbol) CUP$parser$stack.peek()).value;
-
+		RESULT = mp.getDeclaration(e2);
               CUP$parser$result = parser.getSymbolFactory().newSymbol("parametro",72, ((java_cup.runtime.Symbol)CUP$parser$stack.elementAt(CUP$parser$top-1)), ((java_cup.runtime.Symbol)CUP$parser$stack.peek()), RESULT);
             }
           return CUP$parser$result;
@@ -1512,7 +1515,7 @@ mp.setSubprogramaActual(e2); mp.setGlobal(false);mp.setResultSubprogramActual(mp
 		int e2left = ((java_cup.runtime.Symbol)CUP$parser$stack.peek()).left;
 		int e2right = ((java_cup.runtime.Symbol)CUP$parser$stack.peek()).right;
 		Cuarteto e2 = (Cuarteto)((java_cup.runtime.Symbol) CUP$parser$stack.peek()).value;
-
+		RESULT = mp.getInstructions(e1, e2);
               CUP$parser$result = parser.getSymbolFactory().newSymbol("declns",20, ((java_cup.runtime.Symbol)CUP$parser$stack.elementAt(CUP$parser$top-1)), ((java_cup.runtime.Symbol)CUP$parser$stack.peek()), RESULT);
             }
           return CUP$parser$result;
@@ -1524,7 +1527,7 @@ mp.setSubprogramaActual(e2); mp.setGlobal(false);mp.setResultSubprogramActual(mp
 		int eleft = ((java_cup.runtime.Symbol)CUP$parser$stack.peek()).left;
 		int eright = ((java_cup.runtime.Symbol)CUP$parser$stack.peek()).right;
 		Cuarteto e = (Cuarteto)((java_cup.runtime.Symbol) CUP$parser$stack.peek()).value;
-
+		RESULT = e;
               CUP$parser$result = parser.getSymbolFactory().newSymbol("declns",20, ((java_cup.runtime.Symbol)CUP$parser$stack.peek()), ((java_cup.runtime.Symbol)CUP$parser$stack.peek()), RESULT);
             }
           return CUP$parser$result;
@@ -1548,7 +1551,7 @@ mp.setSubprogramaActual(e2); mp.setGlobal(false);mp.setResultSubprogramActual(mp
 		int eleft = ((java_cup.runtime.Symbol)CUP$parser$stack.peek()).left;
 		int eright = ((java_cup.runtime.Symbol)CUP$parser$stack.peek()).right;
 		Cuarteto e = (Cuarteto)((java_cup.runtime.Symbol) CUP$parser$stack.peek()).value;
-		
+		RESULT = e;
               CUP$parser$result = parser.getSymbolFactory().newSymbol("declns1",21, ((java_cup.runtime.Symbol)CUP$parser$stack.peek()), ((java_cup.runtime.Symbol)CUP$parser$stack.peek()), RESULT);
             }
           return CUP$parser$result;
@@ -1623,7 +1626,7 @@ mp.setSubprogramaActual(e2); mp.setGlobal(false);mp.setResultSubprogramActual(mp
 		int eleft = ((java_cup.runtime.Symbol)CUP$parser$stack.peek()).left;
 		int eright = ((java_cup.runtime.Symbol)CUP$parser$stack.peek()).right;
 		Cuarteto e = (Cuarteto)((java_cup.runtime.Symbol) CUP$parser$stack.peek()).value;
-		
+		RESULT = e;
               CUP$parser$result = parser.getSymbolFactory().newSymbol("instructionB",12, ((java_cup.runtime.Symbol)CUP$parser$stack.peek()), ((java_cup.runtime.Symbol)CUP$parser$stack.peek()), RESULT);
             }
           return CUP$parser$result;
@@ -1671,7 +1674,7 @@ mp.setSubprogramaActual(e2); mp.setGlobal(false);mp.setResultSubprogramActual(mp
 		int eleft = ((java_cup.runtime.Symbol)CUP$parser$stack.peek()).left;
 		int eright = ((java_cup.runtime.Symbol)CUP$parser$stack.peek()).right;
 		Cuarteto e = (Cuarteto)((java_cup.runtime.Symbol) CUP$parser$stack.peek()).value;
-		
+		RESULT = e;
               CUP$parser$result = parser.getSymbolFactory().newSymbol("instruction",0, ((java_cup.runtime.Symbol)CUP$parser$stack.peek()), ((java_cup.runtime.Symbol)CUP$parser$stack.peek()), RESULT);
             }
           return CUP$parser$result;
@@ -1845,7 +1848,7 @@ mp.setSubprogramaActual(e2); mp.setGlobal(false);mp.setResultSubprogramActual(mp
 		int eleft = ((java_cup.runtime.Symbol)CUP$parser$stack.peek()).left;
 		int eright = ((java_cup.runtime.Symbol)CUP$parser$stack.peek()).right;
 		String e = (String)((java_cup.runtime.Symbol) CUP$parser$stack.peek()).value;
-		
+		RESULT = mp.getDeclaration(e);
               CUP$parser$result = parser.getSymbolFactory().newSymbol("decl1",18, ((java_cup.runtime.Symbol)CUP$parser$stack.peek()), ((java_cup.runtime.Symbol)CUP$parser$stack.peek()), RESULT);
             }
           return CUP$parser$result;
@@ -1860,7 +1863,7 @@ mp.setSubprogramaActual(e2); mp.setGlobal(false);mp.setResultSubprogramActual(mp
 		int e2left = ((java_cup.runtime.Symbol)CUP$parser$stack.peek()).left;
 		int e2right = ((java_cup.runtime.Symbol)CUP$parser$stack.peek()).right;
 		Cuarteto e2 = (Cuarteto)((java_cup.runtime.Symbol) CUP$parser$stack.peek()).value;
-		RESULT = mp.asignByToken(e1,e2, e1left, e1right);
+		RESULT = mp.asignByToken(e1,e2, true, e1left, e1right);
               CUP$parser$result = parser.getSymbolFactory().newSymbol("assign2",14, ((java_cup.runtime.Symbol)CUP$parser$stack.elementAt(CUP$parser$top-1)), ((java_cup.runtime.Symbol)CUP$parser$stack.peek()), RESULT);
             }
           return CUP$parser$result;
@@ -1968,7 +1971,7 @@ mp.setSubprogramaActual(e2); mp.setGlobal(false);mp.setResultSubprogramActual(mp
 		int e3left = ((java_cup.runtime.Symbol)CUP$parser$stack.elementAt(CUP$parser$top-1)).left;
 		int e3right = ((java_cup.runtime.Symbol)CUP$parser$stack.elementAt(CUP$parser$top-1)).right;
 		Cuarteto e3 = (Cuarteto)((java_cup.runtime.Symbol) CUP$parser$stack.elementAt(CUP$parser$top-1)).value;
-		
+		RESULT = e3;
               CUP$parser$result = parser.getSymbolFactory().newSymbol("array",26, ((java_cup.runtime.Symbol)CUP$parser$stack.elementAt(CUP$parser$top-4)), ((java_cup.runtime.Symbol)CUP$parser$stack.peek()), RESULT);
             }
           return CUP$parser$result;
@@ -1983,7 +1986,7 @@ mp.setSubprogramaActual(e2); mp.setGlobal(false);mp.setResultSubprogramActual(mp
 		int e2left = ((java_cup.runtime.Symbol)CUP$parser$stack.peek()).left;
 		int e2right = ((java_cup.runtime.Symbol)CUP$parser$stack.peek()).right;
 		String e2 = (String)((java_cup.runtime.Symbol) CUP$parser$stack.peek()).value;
-		
+		RESULT = mp.getInstructions(e1, mp.getArrayDeclaration(e2));
               CUP$parser$result = parser.getSymbolFactory().newSymbol("assignA",27, ((java_cup.runtime.Symbol)CUP$parser$stack.elementAt(CUP$parser$top-2)), ((java_cup.runtime.Symbol)CUP$parser$stack.peek()), RESULT);
             }
           return CUP$parser$result;
@@ -1995,7 +1998,7 @@ mp.setSubprogramaActual(e2); mp.setGlobal(false);mp.setResultSubprogramActual(mp
 		int eleft = ((java_cup.runtime.Symbol)CUP$parser$stack.peek()).left;
 		int eright = ((java_cup.runtime.Symbol)CUP$parser$stack.peek()).right;
 		String e = (String)((java_cup.runtime.Symbol) CUP$parser$stack.peek()).value;
-		
+		RESULT = mp.getArrayDeclaration(e);
               CUP$parser$result = parser.getSymbolFactory().newSymbol("assignA",27, ((java_cup.runtime.Symbol)CUP$parser$stack.peek()), ((java_cup.runtime.Symbol)CUP$parser$stack.peek()), RESULT);
             }
           return CUP$parser$result;
@@ -2052,7 +2055,7 @@ mp.setSubprogramaActual(e2); mp.setGlobal(false);mp.setResultSubprogramActual(mp
 		int eleft = ((java_cup.runtime.Symbol)CUP$parser$stack.peek()).left;
 		int eright = ((java_cup.runtime.Symbol)CUP$parser$stack.peek()).right;
 		Cuarteto e = (Cuarteto)((java_cup.runtime.Symbol) CUP$parser$stack.peek()).value;
-		RESULT = e;
+		RESULT = mp.ifOperacion(e, null);
               CUP$parser$result = parser.getSymbolFactory().newSymbol("if",30, ((java_cup.runtime.Symbol)CUP$parser$stack.peek()), ((java_cup.runtime.Symbol)CUP$parser$stack.peek()), RESULT);
             }
           return CUP$parser$result;
@@ -2192,7 +2195,7 @@ mp.setEtiquetaResult(mp.getEtiqueta());
 		int e3left = ((java_cup.runtime.Symbol)CUP$parser$stack.peek()).left;
 		int e3right = ((java_cup.runtime.Symbol)CUP$parser$stack.peek()).right;
 		Cuarteto e3 = (Cuarteto)((java_cup.runtime.Symbol) CUP$parser$stack.peek()).value;
-		RESULT = mp.elseIfOperacion(e2, e3, e2left, e2right);System.out.println("ELSE");
+		RESULT = mp.elseIfOperacion(e2, e3, e2left, e2right);
               CUP$parser$result = parser.getSymbolFactory().newSymbol("elseifAA",35, ((java_cup.runtime.Symbol)CUP$parser$stack.elementAt(CUP$parser$top-4)), ((java_cup.runtime.Symbol)CUP$parser$stack.peek()), RESULT);
             }
           return CUP$parser$result;
@@ -2615,7 +2618,7 @@ mp.setEtiquetaResult(mp.getEtiqueta());
 		int e2left = ((java_cup.runtime.Symbol)CUP$parser$stack.peek()).left;
 		int e2right = ((java_cup.runtime.Symbol)CUP$parser$stack.peek()).right;
 		Cuarteto e2 = (Cuarteto)((java_cup.runtime.Symbol) CUP$parser$stack.peek()).value;
-		RESULT = mp.asignByToken(e1,e2, e1left, e1right);
+		RESULT = mp.asignByToken(e1,e2, false, e1left, e1right);
               CUP$parser$result = parser.getSymbolFactory().newSymbol("assign",13, ((java_cup.runtime.Symbol)CUP$parser$stack.elementAt(CUP$parser$top-1)), ((java_cup.runtime.Symbol)CUP$parser$stack.peek()), RESULT);
             }
           return CUP$parser$result;
@@ -2651,7 +2654,7 @@ mp.setEtiquetaResult(mp.getEtiqueta());
 		int eleft = ((java_cup.runtime.Symbol)CUP$parser$stack.peek()).left;
 		int eright = ((java_cup.runtime.Symbol)CUP$parser$stack.peek()).right;
 		Cuarteto e = (Cuarteto)((java_cup.runtime.Symbol) CUP$parser$stack.peek()).value;
-		RESULT = mp.orderOpNum(e);
+		RESULT = mp.orderOpNum(e, eleft, eright);
               CUP$parser$result = parser.getSymbolFactory().newSymbol("opNum2",58, ((java_cup.runtime.Symbol)CUP$parser$stack.peek()), ((java_cup.runtime.Symbol)CUP$parser$stack.peek()), RESULT);
             }
           return CUP$parser$result;
@@ -2837,7 +2840,7 @@ mp.setEtiquetaResult(mp.getEtiqueta());
 		int eleft = ((java_cup.runtime.Symbol)CUP$parser$stack.peek()).left;
 		int eright = ((java_cup.runtime.Symbol)CUP$parser$stack.peek()).right;
 		Cuarteto e = (Cuarteto)((java_cup.runtime.Symbol) CUP$parser$stack.peek()).value;
-		RESULT = mp.orderOpNum(e);
+		RESULT = mp.orderOpNum(e, eleft, eright);
               CUP$parser$result = parser.getSymbolFactory().newSymbol("opNum",57, ((java_cup.runtime.Symbol)CUP$parser$stack.peek()), ((java_cup.runtime.Symbol)CUP$parser$stack.peek()), RESULT);
             }
           return CUP$parser$result;
@@ -3296,7 +3299,7 @@ mp.setEtiquetaResult(mp.getEtiqueta());
 		int eleft = ((java_cup.runtime.Symbol)CUP$parser$stack.peek()).left;
 		int eright = ((java_cup.runtime.Symbol)CUP$parser$stack.peek()).right;
 		Cuarteto e = (Cuarteto)((java_cup.runtime.Symbol) CUP$parser$stack.peek()).value;
-		RESULT = mp.orderOpNum(e);
+		RESULT = mp.orderOpNum(e, eleft, eright);
               CUP$parser$result = parser.getSymbolFactory().newSymbol("expRel",65, ((java_cup.runtime.Symbol)CUP$parser$stack.peek()), ((java_cup.runtime.Symbol)CUP$parser$stack.peek()), RESULT);
             }
           return CUP$parser$result;
