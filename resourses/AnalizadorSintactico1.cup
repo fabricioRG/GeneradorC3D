@@ -51,7 +51,7 @@ non terminal Cuarteto 	opBol, b;
 non terminal Cuarteto 	opRel, r, expRel, er;
 non terminal Cuarteto 	scans, scann;
 non terminal Cuarteto 	subprogram, parametros, parametrosA, parametro, rtrn;
-non terminal Cuarteto 	subprogramCall, paramsProgram, paramsA;
+non terminal Cuarteto 	simpleSubprogramCall, subprogramCall, paramsProgram, paramsA;
 
 precedence left 		ELSE;
 precedence left 		ELSIF;
@@ -116,7 +116,11 @@ programInstructionB ::=	formalAssign:e {:RESULT = e;:}
 						| scans:e {:RESULT = e;:}
 						| scann:e {:RESULT = e;:}
 						| rtrn:e {:RESULT = e; mp.setSubprogramReturn(true);:}
+						| simpleSubprogramCall:e {:RESULT = e;:}
 						;
+
+simpleSubprogramCall ::= subprogramCall:e SEMICOLON {:RESULT = mp.getSimpleSubprogramCall(e);:}
+						 ;
 
 subprogramCall ::= 		VARIABLE:e1 paramsA:e2 {:RESULT = mp.getSubprogramCall(e1, e2, e1left, e1right);:}
 						;
@@ -180,6 +184,7 @@ instruction ::=  		decl:e {:RESULT = e;:}
 						| scans:e {:RESULT = e;:}
 						| scann:e {:RESULT = e;:}
 						| rtrn:e {:RESULT = e; mp.setSubprogramReturn(true);:}
+						| simpleSubprogramCall:e {:RESULT = e;:}
 						;
 
 decl ::= 				tipo:e1 decls:e2 SEMICOLON {:RESULT = e2;:}
@@ -574,7 +579,6 @@ PRINT[x,y,z, 2 + 3];
 x <- suma(array1[x][y][z], i);
 i <- i + 1;
 ]
-
 ]
 %%%MAIN
 
@@ -675,6 +679,45 @@ return 10;
 %%%
 MAIN()[
 int x <- x();
+]
+
+int suma (int a, int b)[
+PRINT["ALGO"];
+return a + b;
+]
+%%%
+MAIN()[
+int y <- suma (2, 2);
+]
+
+ARRAY int [10-3][20%2][30-2] array;
+int y;
+int x ()[
+int x;
+ARRAY int [1] array2;
+%%%
+x <- array [2-4][5*4][4-2];
+return array2 [3 + 4 * 3];
+]
+%%%
+MAIN()[
+int x <- x();
+]
+
+int suma (int a, int b)[
+return a + b;
+]
+void x ()[
+int y, x;
+%%%
+x <- 10 * 30 + 3;
+]
+%%%
+MAIN()[
+int a <- 20;
+int b <- 10;
+x();
+PRINT["SUMA", suma(a,b)];
 ]
 
 */

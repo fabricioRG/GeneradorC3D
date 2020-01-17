@@ -7,12 +7,14 @@ package codigo3d.backend.objetos;
 public class Tipo {
 
     private String nombre;
+    private String valor;
     private Tipo padre;
     private Tipo hijo;
     private int posicion;
 
-    public Tipo(String nombre, Tipo padre, Tipo hijo, int posicion) {
+    public Tipo(String nombre, String valor, Tipo padre, Tipo hijo, int posicion) {
         this.nombre = nombre;
+        this.valor = valor;
         this.padre = padre;
         this.hijo = hijo;
         this.posicion = posicion;
@@ -52,6 +54,14 @@ public class Tipo {
 
     public void setPosicion(int posicion) {
         this.posicion = posicion;
+    }
+
+    public String getValor() {
+        return valor;
+    }
+
+    public void setValor(String valor) {
+        this.valor = valor;
     }
     
 }

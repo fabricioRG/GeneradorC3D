@@ -62,7 +62,7 @@ non terminal Cuarteto 	opBol, b;
 non terminal Cuarteto 	opRel, r, expRel, er;
 non terminal Cuarteto 	scans, scann;
 non terminal Cuarteto 	subprogram, parametros, parametrosA, parametro, rtrn;
-non terminal Cuarteto 	subprogramCall, paramsProgram, paramsA;
+non terminal Cuarteto 	simpleSubprogramCall, subprogramCall, paramsProgram, paramsA;
 
 precedence left 		ELSE;
 precedence left 		ELSIF;
@@ -87,7 +87,7 @@ globalInstruction ::= 	bodyInstruction SEPARATOR mainInstruction
 						//| error:e {:mp.printSintaxError("No se ha encontrado ninguna estructura valida");:} //SEMICOLON
 						;
 
-mainInstruction ::= 	MAIN:e1 OPEN_BRK CLOSE_BRK {:mp.setMainDecl(e1);mp.setGlobal(false);:} block {:mp.setGlobal(true);:}
+mainInstruction ::= 	MAIN:e1 OPEN_BRK CLOSE_BRK {:mp.setMainDecl(e1, e1left, e1right);mp.setGlobal(false);:} block {:mp.setGlobal(true);:}
 						| MAIN:e OPEN_BRK CLOSE_BRK
 						| MAIN:e
 						| error:e {:mp.printSintaxError("Estructura de MAIN no valida o faltante");:} CLOSE_BRK
@@ -128,9 +128,13 @@ programInstructionB ::=	formalAssign:e {:RESULT = e;:}
 						| println:e {:RESULT = e;:}
 						| scans:e {::}
 						| scann:e {::}
-						| rtrn 
+						| rtrn:e {::}
+						| subprogramCall:e {::}
 						| error:e {:mp.printSintaxError("Instruccion no conocida en cuerpo de programa: ");:} SEMICOLON //BOOLEAN VARIABLE SEMICOLON
 						;
+
+simpleSubprogramCall ::= subprogramCall:e SEMICOLON {:RESULT = e;:}
+						 ;
 
 subprogramCall ::= 		VARIABLE:e1 paramsA:e2 {:/*RESULT = mp.getSubprogramCall(e1, e2, e1left, e1right);*/:}
 						;
@@ -198,6 +202,7 @@ instruction ::=  		decl:e {:RESULT = e;:}
 						| scans:e {::}
 						| scann:e {::}
 						| rtrn:e {::}
+						| simpleSubprogramCall:e {::}
 						| error:e {:mp.printSintaxError("Instruccion no conocida");:} SEMICOLON
 						;
 

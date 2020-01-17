@@ -23,14 +23,14 @@ public class DeclaradorValores extends AccionParser{
                 if (!getTablaSimbolos().existLocalVariableParametroOrArray(cuarteto.getOperador(), getSubprogramaActual())) {
                     if (cuarteto.getComponentes() != null) {
                         if (TablaTipos.getInstance().isCompatible(cuarteto.getComponentes().getResultado().getToken(), tipo)) {
-                            getTablaSimbolos().setLocalVariable(tipo, cuarteto.getOperador(), getSubprogramaActual());
+                            getTablaSimbolos().setLocalVariable(tipo, cuarteto.getOperando1(), getSubprogramaActual());
                         } else {
                             cuarteto.getOperando1().setToken(tipo);
                             throw new Exception("Asignacion" + ManejadorParser.SALTO_LN + manejador.getInvalidAsign(cuarteto.getOperando1(),
                                     cuarteto.getComponentes().getResultado().getToken()));
                         }
                     } else {
-                        getTablaSimbolos().setLocalVariable(tipo, cuarteto.getOperador(), getSubprogramaActual());
+                        getTablaSimbolos().setLocalVariable(tipo, cuarteto.getOperando1(), getSubprogramaActual());
                     }
                 } else {
                     cuarteto.getOperando1().setToken(tipo);
@@ -39,7 +39,7 @@ public class DeclaradorValores extends AccionParser{
                 }
             } else {
                 if (!getTablaSimbolos().existGlobalVariableOrArray(cuarteto.getOperador())) {
-                    getTablaSimbolos().setGlobalVariable(tipo, cuarteto.getOperador());
+                    getTablaSimbolos().setGlobalVariable(tipo, cuarteto.getOperando1());
                 } else {
                     cuarteto.getOperando1().setToken(tipo);
                     throw new Exception("Declaracion de variable global" + ManejadorParser.SALTO_LN + manejador.getValorInfo(cuarteto.getOperando1())

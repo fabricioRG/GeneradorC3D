@@ -47,6 +47,38 @@ public class TablaSimbolos {
     public Simbolo getSubprogram(String var) {
         return getSimbol(var);
     }
+    
+    public String getCategoriaVariable(){
+        return VARIABLE;
+    }
+    
+    public String getCategoriaNumero(){
+        return NUMERO;
+    }
+    
+    public String getCategoriaTexto(){
+        return TEXTO;
+    }
+    
+    public String getCategoriaBool(){
+        return BOOL;
+    }
+    
+    public int getAmbitoGlobal(){
+        return AMBITO_GLOBAL;
+    }
+    
+    public int getAmbitoLocal(){
+        return AMBITO_LOCAL;
+    }
+    
+    public boolean isAmbitoLocal(int ambito){
+        return ambito == AMBITO_LOCAL;
+    }
+    
+    public boolean isAmbitoGlobal(int ambito){
+        return ambito == AMBITO_GLOBAL;
+    }
 
     public boolean isSubprogram(String categoria) {
         return categoria.equals(SUBPROGRAMA);
@@ -62,6 +94,22 @@ public class TablaSimbolos {
 
     public boolean isArreglo(String categoria) {
         return categoria.equals(ARREGLO);
+    }
+    
+    public boolean isNumero(String categoria){
+        return categoria.equals(NUMERO);
+    }
+    
+    public boolean isTexto(String categoria){
+        return categoria.equals(TEXTO);
+    }
+    
+    public boolean isBool(String categoria){
+        return categoria.equals(BOOL);
+    }
+    
+    public boolean isValor(String categoria){
+        return isTexto(categoria) || isNumero(categoria) || isBool(categoria);
     }
 
     public boolean existSubprogram(String simbol) {
@@ -111,43 +159,43 @@ public class TablaSimbolos {
         return existGlobalVariable(var) || existGlobalArray(var);
     }
 
-    public void setSubprogram(Tipo tipo, String simbol) {
-        Simbolo simbolo = new SimboloBuilder().lexema(simbol).categoria(SUBPROGRAMA).
-                ambito(AMBITO_LOCAL).token(tipo).parametros(new LinkedList<>()).estructura(new LinkedList<>()).build();
+    public void setSubprogram(Tipo tipo, Simbolo var) {
+        Simbolo simbolo = new SimboloBuilder().lexema(var.getLexema()).fila(var.getFila()).columna(var.getColumna()).categoria(SUBPROGRAMA).
+                ambito(AMBITO_GLOBAL).token(tipo).parametros(new LinkedList<>()).estructura(new LinkedList<>()).build();
         simbolos.put(simbolo.getLexema(), simbolo);
     }
 
-    public void setLocalVariable(Tipo tipo, String var, String subprograma) {
-        String nombreVar = getLocalName(var, subprograma);
-        Simbolo simbolo = new SimboloBuilder().token(tipo).lexema(nombreVar).categoria(VARIABLE).
+    public void setLocalVariable(Tipo tipo, Simbolo var, String subprograma) {
+        String nombreVar = getLocalName(var.getLexema(), subprograma);
+        Simbolo simbolo = new SimboloBuilder().token(tipo).lexema(nombreVar).fila(var.getFila()).columna(var.getColumna()).categoria(VARIABLE).
                 ambito(AMBITO_LOCAL).build();
         simbolos.put(simbolo.getLexema(), simbolo);
     }
 
-    public void setLocalArray(Tipo tipo, String var, LinkedList<Cuarteto> dimension, String subprograma) {
-        String nombreVar = getLocalName(var, subprograma);
-        Simbolo simbolo = new SimboloBuilder().token(tipo).lexema(nombreVar).categoria(ARREGLO).
+    public void setLocalArray(Tipo tipo, Simbolo var, LinkedList<Cuarteto> dimension, String subprograma) {
+        String nombreVar = getLocalName(var.getLexema(), subprograma);
+        Simbolo simbolo = new SimboloBuilder().token(tipo).lexema(nombreVar).fila(var.getFila()).columna(var.getColumna()).categoria(ARREGLO).
                 ambito(AMBITO_LOCAL).noDimensiones(dimension.size()).dimensiones(dimension).build();
         simbolos.put(simbolo.getLexema(), simbolo);
     }
 
-    public void setParametro(Tipo tipo, String var, String subprograma) {
-        String nombreVar = getLocalName(var, subprograma);
-        Simbolo simbolo = new SimboloBuilder().token(tipo).lexema(nombreVar).categoria(PARAMETRO).
+    public void setParametro(Tipo tipo, Simbolo var, String subprograma) {
+        String nombreVar = getLocalName(var.getLexema(), subprograma);
+        Simbolo simbolo = new SimboloBuilder().token(tipo).lexema(nombreVar).fila(var.getFila()).columna(var.getColumna()).categoria(PARAMETRO).
                 ambito(AMBITO_LOCAL).build();
         simbolos.put(simbolo.getLexema(), simbolo);
     }
 
-    public void setGlobalVariable(Tipo tipo, String var) {
-        String nombreVar = getGlobalName(var);
-        Simbolo simbolo = new SimboloBuilder().token(tipo).lexema(nombreVar).categoria(VARIABLE).
+    public void setGlobalVariable(Tipo tipo, Simbolo var) {
+        String nombreVar = getGlobalName(var.getLexema());
+        Simbolo simbolo = new SimboloBuilder().token(tipo).fila(var.getFila()).columna(var.getColumna()).lexema(nombreVar).categoria(VARIABLE).
                 ambito(AMBITO_GLOBAL).build();
         simbolos.put(simbolo.getLexema(), simbolo);
     }
 
-    public void setGlobalArray(Tipo tipo, String var, LinkedList<Cuarteto> dimension) {
-        String nombreVar = getGlobalName(var);
-        Simbolo simbolo = new SimboloBuilder().token(tipo).lexema(nombreVar).categoria(ARREGLO).
+    public void setGlobalArray(Tipo tipo, Simbolo var, LinkedList<Cuarteto> dimension) {
+        String nombreVar = getGlobalName(var.getLexema());
+        Simbolo simbolo = new SimboloBuilder().token(tipo).fila(var.getFila()).columna(var.getColumna()).lexema(nombreVar).categoria(ARREGLO).
                 ambito(AMBITO_GLOBAL).noDimensiones(dimension.size()).dimensiones(dimension).build();
         simbolos.put(simbolo.getLexema(), simbolo);
     }
@@ -182,5 +230,8 @@ public class TablaSimbolos {
     public final static String VARIABLE = "variable";
     public final static String PARAMETRO = "parametro";
     public final static String ARREGLO = "arreglo";
+    public final static String NUMERO = "numero";
+    public final static String TEXTO = "texto";
+    public final static String BOOL = "bool";
     public final static String GLOBAL_VAR = "$";
 }

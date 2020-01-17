@@ -8,18 +8,6 @@ import java.util.HashMap;
  */
 public class TablaTipos {
 
-    public final static String[] TIPOS = {"boolean", "char", "byte", "int", "long", "float", "double", "string", "void", "error"};
-    public final int BOOLEAN = 0;
-    public final int CHAR = 1;
-    public final int BYTE = 2;
-    public final int INT = 3;
-    public final int LONG = 4;
-    public final int FLOAT = 5;
-    public final int DOUBLE = 6;
-    public final int STRING = 7;
-    public final int VOID = 8;
-    public final int ERROR = 9;
-
     private HashMap<String, Tipo> tipos = null;
     private static TablaTipos INSTANCE = null;
 
@@ -45,6 +33,7 @@ public class TablaTipos {
         for (int i = 0; i < TIPOS.length; i++) {
             Tipo tipo = new Tipo(TIPOS[i]);
             tipo.setPosicion(i);
+            tipo.setValor(VALORES[i]);
             if (i > 0) {
                 tipo.setHijo(tipos.get(TIPOS[i - 1]));
                 if (i < TIPOS.length) {
@@ -94,15 +83,15 @@ public class TablaTipos {
     public Tipo getVoid() {
         return TablaTipos.getInstance().getTipoByKey(TIPOS[VOID]);
     }
-    
-    public Tipo getError(){
-       return TablaTipos.getInstance().getTipoByKey(TIPOS[ERROR]);
+
+    public Tipo getError() {
+        return TablaTipos.getInstance().getTipoByKey(TIPOS[ERROR]);
     }
 
-    public boolean isError(Tipo token){
+    public boolean isError(Tipo token) {
         return token.getNombre().equals(TIPOS[ERROR]);
     }
-    
+
     public boolean isVoid(Tipo token) {
         return token.getNombre().equals(TIPOS[VOID]);
     }
@@ -157,4 +146,61 @@ public class TablaTipos {
             return isString(token1) && isString(token2);
         }
     }
+
+    public String getTypeBoolean() {
+        return TYPE_BOOLEAN_C;
+    }
+
+    public String getTypeChar() {
+        return TYPE_CHAR_C;
+    }
+
+    public String getTypeByte() {
+        return TYPE_BYTE_C;
+    }
+
+    public String getTypeLong() {
+        return TYPE_LONG_C;
+    }
+
+    public String getTypeFloat() {
+        return TYPE_FLOAT_C;
+    }
+
+    public String getTypeDouble() {
+        return TYPE_DOUBLE_C;
+    }
+
+    public String getTypeString() {
+        return TYPE_STRING_C;
+    }
+
+    public String getTypeVoid() {
+        return TYPE_VOID_C;
+    }
+
+    public final static String[] TIPOS = {"boolean", "char", "byte", "int", "long", "float", "double", "string", "void", "error"};
+    public final static String[] VALORES = {TablaTipos.TYPE_BOOLEAN_C, TablaTipos.TYPE_CHAR_C, TablaTipos.TYPE_BYTE_C,
+        TablaTipos.TYPE_INT_C, TablaTipos.TYPE_LONG_C, TablaTipos.TYPE_FLOAT_C, TablaTipos.TYPE_DOUBLE_C,
+        TablaTipos.TYPE_STRING_C, TablaTipos.TYPE_VOID_C, TablaTipos.TYPE_ERROR_C};
+    public final int BOOLEAN = 0;
+    public final int CHAR = 1;
+    public final int BYTE = 2;
+    public final int INT = 3;
+    public final int LONG = 4;
+    public final int FLOAT = 5;
+    public final int DOUBLE = 6;
+    public final int STRING = 7;
+    public final int VOID = 8;
+    public final int ERROR = 9;
+    public static final String TYPE_BOOLEAN_C = "bool";
+    public static final String TYPE_CHAR_C = "char";
+    public static final String TYPE_BYTE_C = "unsigned char";
+    public static final String TYPE_INT_C = "int";
+    public static final String TYPE_LONG_C = "long";
+    public static final String TYPE_FLOAT_C = "float";
+    public static final String TYPE_STRING_C = "string";
+    public static final String TYPE_DOUBLE_C = "double";
+    public static final String TYPE_VOID_C = "void";
+    public static final String TYPE_ERROR_C = "error";
 }
