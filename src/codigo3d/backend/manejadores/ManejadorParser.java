@@ -24,13 +24,8 @@ public class ManejadorParser {
     public ManejadorParser(ManejadorAreaTexto mi) {
         this.manejadorAreaTexto = mi;
         this.tablaSimbolos = new TablaSimbolos();
-        //setEtiquetaResult(getSimpleEtiqueta());
-        /*this.declarador = new DeclaradorValores(this);
-        this.asignador = new AsignadorValores(this);
-        this.retornador = new RetornadorValores(this);
-        this.operador = new ProcesadorNumerico(this);
-        this.procesadorFunciones = new ProcesadorFunciones(this);*/
-        //this.acciones = new AccionParser();
+        this.selectedCPP = mi.isSelectedCPP();
+        this.selectedC3D = mi.isSelectedC3D();
     }
 
     // --------------------ANALIZADOR NO 1------------------------ //
@@ -490,19 +485,6 @@ public class ManejadorParser {
                     + getValorInfo(new SimboloBuilder().lexema(key).fila(fila).columna(columna).build())
                     + "Token necesario: boolean (booleano)");
         }
-
-        /*if (existSimbol(key)) {
-            Cuarteto var = getVariable(key, fila, columna);
-            var.setOperador(VAR_BOOL);
-            if (TablaTipos.getInstance().isBoolean(var.getResultado().getToken())) {
-                return new CuartetoBuilder().operando1(getSimbolString(setEtiquetaResult(getEtiqueta()))).
-                        operando2(getSimbolString(getSimpleEtiqueta())).resultado(getSimbolBoolean(getEtiqueta())).restriccion(var).build();
-            } else {
-                throw new Exception("Variable " + key + " no puede ser de tipo booleana ");
-            }
-        } else {
-            throw new Exception("Variable " + key + " no ha sido declarada");
-        }*/
     }
 
     public Cuarteto getArrayPositionRel(Cuarteto arrayPosition) {
@@ -1203,22 +1185,6 @@ public class ManejadorParser {
             setOperadorAll(opBol, CICLO);
             setAtLast(opBol, result);
             return setAtLast(asignacion, opBol);
-            /*Cuarteto last = getLastCuarteto(opBol);
-            Cuarteto instruccion = null;
-            Cuarteto num = getCuartetoNum(getSimbolEntero(entero, 0, 0));
-            Cuarteto terminal = getTerminalDeclaration(getResult(), getTipo(num.getResultado(), num.getResultado()));
-            if (signo.equals(PLUS)) {
-                instruccion = new CuartetoBuilder().operador(PLUS).operando1(asignacion.getResultado()).operando2(num.getResultado()).resultado(terminal.getResultado()).build();
-            } else if (signo.equals(MINUS)) {
-                instruccion = new CuartetoBuilder().operador(MINUS).operando1(asignacion.getResultado()).operando2(num.getResultado()).resultado(terminal.getResultado()).build();
-            }
-            Cuarteto asign = asignByToken(asignacion, instruccion, false, fila, columna);
-            etiquetaResult = getEtiqueta();
-            Cuarteto result = new CuartetoBuilder().operador(FOR).operando1(last.getOperando2()).
-                    operando2(opBol.getOperando1()).resultado(last.getResultado()).componentes(instructions).auxiliar(terminal).restriccion(asign).build();
-            setOperadorAll(opBol, CICLO);
-            setAtLast(opBol, result);
-            return setAtLast(asignacion, opBol);*/
         } else {
             throw new Exception("Funcion FOR" + SALTO_LN
                     + getValorInfo(new SimboloBuilder().token(opBol.getResultado().getToken()).fila(fila2).columna(columna2).build())
@@ -1241,25 +1207,33 @@ public class ManejadorParser {
     public void print(Cuarteto bodyInstruction, Cuarteto mainInstruction) throws IOException {
         isCode3D = true;
         isCodeC = false;
-        if (bodyInstruction != null) {
-            printBodyInstruction(bodyInstruction);
+        if (selectedC3D) {
+            if (bodyInstruction != null) {
+                printBodyInstruction(bodyInstruction);
+            }
+            printMainInstruction(mainInstruction);
         }
-        printMainInstruction(mainInstruction);
 
         isCode3D = false;
         isCodeC = true;
-        fileWriter = new FileWriter(PATH_FILE);
-        printWriter = new PrintWriter(fileWriter);
-        printWriter.println(LIBRARIES_VALUE);
-        printWriter.println(OPEN_MAIN);
-        if (bodyInstruction != null) {
-            printBodyInstruction(bodyInstruction);
+        if (selectedCPP) {
+            fileWriter = new FileWriter(PATH_FILE);
+            printWriter = new PrintWriter(fileWriter);
+            printWriter.println(LIBRARIES_VALUE);
+            printWriter.println(OPEN_MAIN);
+            if (bodyInstruction != null) {
+                printBodyInstruction(bodyInstruction);
+            }
+            printMainInstruction(mainInstruction);
+            printWriter.print(declaracionesCodigoC);
+            printWriter.print(cuerpoCodigoC);
+            printWriter.print(CLOSE_MAIN);
+            printWriter.close();
+
+            String cmd = "g++ CodigoC.cpp"; //Comando de apagado en linux
+            Runtime.getRuntime().exec(cmd);
+
         }
-        printMainInstruction(mainInstruction);
-        printWriter.print(declaracionesCodigoC);
-        printWriter.print(cuerpoCodigoC);
-        printWriter.print(CLOSE_MAIN);
-        printWriter.close();
     }
 
     public boolean isOperadorRelacional(String rel) {
@@ -1904,7 +1878,7 @@ public class ManejadorParser {
                     currentTerminal = VOID_VALUE;
                 }
             } else {
-                currentTerminal = sim.getResultado().getLexema() + SEPARATOR+ sim.getResultado().getFila() + sim.getResultado().getColumna();
+                currentTerminal = sim.getResultado().getLexema() + SEPARATOR + sim.getResultado().getFila() + sim.getResultado().getColumna();
             }
             //currentTerminal = actualVar.getLexema();
             terminalResult = sim.getResultado().getLexema();
@@ -1943,18 +1917,6 @@ public class ManejadorParser {
                 }
             }
             currentTerminal = "";
-            /*int size = 0;
-            if (sim.getComponentes() != null) {
-                Cuarteto componentes = sim.getComponentes();
-                Cuarteto parametros = sim.getAuxiliar();
-                while (componentes != null) {
-                    print(componentes.getComponentes());
-                    componentes = componentes.getSiguiente();
-                    size++;
-                }
-                print(parametros);
-            }*/
-            //println(sim.getResultado().getLexema() + SPACE + SIGN_EQUAL + SPACE + CALL + SPACE + sim.getOperando1().getLexema() + COMMA + SPACE + size);
         }
     }
 
@@ -2289,13 +2251,6 @@ public class ManejadorParser {
     public final static String LIBRARIES_VALUE = "#include <iostream> \n#include <string>\n#define N 256 \nusing namespace std;";
     public final static String OPEN_MAIN = "int main(){";
     public final static String CLOSE_MAIN = "\nreturn 0;\n}";
-    /*private AccionParser acciones = null;
-    private AsignadorValores asignador = null;
-    private DeclaradorValores declarador = null;
-    private ProcesadorFunciones procesadorFunciones = null;
-    private ProcesadorNumerico operador = null;
-    private RetornadorValores retornador = null;*/
-    //private LinkedList <String>
     private int contador = 0;
     private int contadorEtq = 0;
     private int contadorSubprograma = 0;
@@ -2316,4 +2271,6 @@ public class ManejadorParser {
     public final static String PATH_FILE = "./CodigoC.cpp";
     private String cuerpoCodigoC = "";
     private String declaracionesCodigoC = "";
+    private boolean selectedCPP = false;
+    private boolean selectedC3D = false;
 }

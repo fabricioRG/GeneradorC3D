@@ -37,6 +37,8 @@ public class AreaTexto extends javax.swing.JPanel implements KeyListener, MouseL
     public String textoIngresado = "";
     private ManejadorAreaTexto mat = null;
     private boolean modificado = false;
+    private boolean selectedC3D = false;
+    private boolean selectedCPP = false;
 
     /**
      * Creates new form AreaTexto
@@ -46,10 +48,11 @@ public class AreaTexto extends javax.swing.JPanel implements KeyListener, MouseL
         interprete.addKeyListener(this);
         interprete.addMouseListener(this);
         mat = new ManejadorAreaTexto(this);
-        navegador.setEditable(false);
-        navegador.setCursor(new java.awt.Cursor(java.awt.Cursor.TEXT_CURSOR));
-        sizeLabel.setText(navegador.getPreferredSize().height + " x " + navegador.getPreferredSize().width);
-        navegador.setComponentOrientation(ComponentOrientation.LEFT_TO_RIGHT);
+        codigo3d.setEditable(false);
+        c3dPanel.setVisible(false);
+        codigo3d.setCursor(new java.awt.Cursor(java.awt.Cursor.TEXT_CURSOR));
+        sizeLabel.setText(codigo3d.getPreferredSize().height + " x " + codigo3d.getPreferredSize().width);
+        codigo3d.setComponentOrientation(ComponentOrientation.LEFT_TO_RIGHT);
     }
 
     /**
@@ -63,33 +66,27 @@ public class AreaTexto extends javax.swing.JPanel implements KeyListener, MouseL
 
         jLabel4 = new javax.swing.JLabel();
         jPanel1 = new javax.swing.JPanel();
-        jScrollPane1 = new javax.swing.JScrollPane();
-        interprete = new javax.swing.JEditorPane();
         jLabel1 = new javax.swing.JLabel();
         jLabel2 = new javax.swing.JLabel();
         jLabelColummna = new javax.swing.JLabel();
         jLabelLinea = new javax.swing.JLabel();
         jButton1 = new javax.swing.JButton();
         jButton2 = new javax.swing.JButton();
-        jScrollPane4 = new javax.swing.JScrollPane();
-        navegador = new javax.swing.JTextPane();
         jButton5 = new javax.swing.JButton();
         jLabel5 = new javax.swing.JLabel();
         sizeLabel = new javax.swing.JLabel();
+        c3dbutton = new javax.swing.JToggleButton();
+        cppButton = new javax.swing.JToggleButton();
+        c3dPanel = new javax.swing.JPanel();
+        jScrollPane4 = new javax.swing.JScrollPane();
+        codigo3d = new javax.swing.JTextPane();
+        jPanel3 = new javax.swing.JPanel();
+        jScrollPane1 = new javax.swing.JScrollPane();
+        interprete = new javax.swing.JEditorPane();
 
         jLabel4.setText("jLabel4");
 
         setPreferredSize(new java.awt.Dimension(844, 455));
-
-        interprete.setBackground(new java.awt.Color(2, 36, 61));
-        interprete.setBorder(javax.swing.BorderFactory.createEmptyBorder(7, 7, 7, 7));
-        interprete.setForeground(new java.awt.Color(254, 254, 254));
-        interprete.setToolTipText("");
-        interprete.setCaretColor(new java.awt.Color(248, 248, 240));
-        interprete.setMargin(new java.awt.Insets(7, 7, 7, 7));
-        jScrollPane1.setViewportView(interprete);
-        tln = new TextLineNumber(interprete);
-        jScrollPane1.setRowHeaderView(tln);
 
         jLabel1.setFont(new java.awt.Font("Open Sans", 1, 12)); // NOI18N
         jLabel1.setForeground(new java.awt.Color(2, 36, 61));
@@ -123,14 +120,6 @@ public class AreaTexto extends javax.swing.JPanel implements KeyListener, MouseL
             }
         });
 
-        navegador.setBackground(new java.awt.Color(2, 36, 61));
-        navegador.setBorder(javax.swing.BorderFactory.createEmptyBorder(7, 7, 7, 7));
-        navegador.setForeground(new java.awt.Color(255, 255, 255));
-        navegador.setCursor(new java.awt.Cursor(java.awt.Cursor.TEXT_CURSOR));
-        jScrollPane4.setViewportView(navegador);
-        tln2 = new TextLineNumber(navegador);
-        jScrollPane4.setRowHeaderView(tln2);
-
         jButton5.setBackground(new java.awt.Color(254, 254, 254));
         jButton5.setForeground(new java.awt.Color(2, 4, 179));
         jButton5.setText("Clear");
@@ -143,6 +132,64 @@ public class AreaTexto extends javax.swing.JPanel implements KeyListener, MouseL
         jLabel5.setText("Size:");
 
         sizeLabel.setText(" ");
+
+        c3dbutton.setBackground(new java.awt.Color(255, 255, 255));
+        c3dbutton.setForeground(new java.awt.Color(255, 153, 0));
+        c3dbutton.setText("C3D");
+        c3dbutton.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                c3dbuttonActionPerformed(evt);
+            }
+        });
+
+        cppButton.setBackground(new java.awt.Color(255, 255, 255));
+        cppButton.setForeground(new java.awt.Color(255, 153, 51));
+        cppButton.setText("C++");
+        cppButton.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                cppButtonActionPerformed(evt);
+            }
+        });
+
+        codigo3d.setBackground(new java.awt.Color(2, 36, 61));
+        codigo3d.setBorder(javax.swing.BorderFactory.createEmptyBorder(7, 7, 7, 7));
+        codigo3d.setForeground(new java.awt.Color(255, 255, 255));
+        codigo3d.setCursor(new java.awt.Cursor(java.awt.Cursor.TEXT_CURSOR));
+        jScrollPane4.setViewportView(codigo3d);
+        tln2 = new TextLineNumber(codigo3d);
+        jScrollPane4.setRowHeaderView(tln2);
+
+        javax.swing.GroupLayout c3dPanelLayout = new javax.swing.GroupLayout(c3dPanel);
+        c3dPanel.setLayout(c3dPanelLayout);
+        c3dPanelLayout.setHorizontalGroup(
+            c3dPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addComponent(jScrollPane4, javax.swing.GroupLayout.DEFAULT_SIZE, 299, Short.MAX_VALUE)
+        );
+        c3dPanelLayout.setVerticalGroup(
+            c3dPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addComponent(jScrollPane4)
+        );
+
+        interprete.setBackground(new java.awt.Color(2, 36, 61));
+        interprete.setBorder(javax.swing.BorderFactory.createEmptyBorder(7, 7, 7, 7));
+        interprete.setForeground(new java.awt.Color(254, 254, 254));
+        interprete.setToolTipText("");
+        interprete.setCaretColor(new java.awt.Color(248, 248, 240));
+        interprete.setMargin(new java.awt.Insets(7, 7, 7, 7));
+        jScrollPane1.setViewportView(interprete);
+        tln = new TextLineNumber(interprete);
+        jScrollPane1.setRowHeaderView(tln);
+
+        javax.swing.GroupLayout jPanel3Layout = new javax.swing.GroupLayout(jPanel3);
+        jPanel3.setLayout(jPanel3Layout);
+        jPanel3Layout.setHorizontalGroup(
+            jPanel3Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addComponent(jScrollPane1)
+        );
+        jPanel3Layout.setVerticalGroup(
+            jPanel3Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addComponent(jScrollPane1, javax.swing.GroupLayout.Alignment.TRAILING, javax.swing.GroupLayout.DEFAULT_SIZE, 418, Short.MAX_VALUE)
+        );
 
         javax.swing.GroupLayout jPanel1Layout = new javax.swing.GroupLayout(jPanel1);
         jPanel1.setLayout(jPanel1Layout);
@@ -157,29 +204,37 @@ public class AreaTexto extends javax.swing.JPanel implements KeyListener, MouseL
                 .addComponent(jLabel2)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
                 .addComponent(jLabelColummna, javax.swing.GroupLayout.PREFERRED_SIZE, 57, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addGap(123, 123, 123)
-                .addComponent(jButton1)
-                .addGap(25, 25, 25)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                .addComponent(jButton1, javax.swing.GroupLayout.PREFERRED_SIZE, 108, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
                 .addComponent(jButton2)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
-                .addComponent(jButton5)
-                .addGap(142, 142, 142)
+                .addComponent(jButton5, javax.swing.GroupLayout.PREFERRED_SIZE, 98, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
+                .addComponent(c3dbutton, javax.swing.GroupLayout.PREFERRED_SIZE, 75, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
+                .addComponent(cppButton, javax.swing.GroupLayout.PREFERRED_SIZE, 75, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addComponent(jLabel5)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addComponent(sizeLabel, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                .addGap(54, 54, 54))
-            .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, jPanel1Layout.createSequentialGroup()
-                .addComponent(jScrollPane1)
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addComponent(jScrollPane4, javax.swing.GroupLayout.PREFERRED_SIZE, 390, javax.swing.GroupLayout.PREFERRED_SIZE))
+                .addGap(110, 110, 110))
+            .addGroup(jPanel1Layout.createSequentialGroup()
+                .addComponent(jPanel3, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                .addGap(0, 0, 0)
+                .addComponent(c3dPanel, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addGap(62, 62, 62))
         );
         jPanel1Layout.setVerticalGroup(
             jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(jPanel1Layout.createSequentialGroup()
                 .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addComponent(jScrollPane1, javax.swing.GroupLayout.DEFAULT_SIZE, 418, Short.MAX_VALUE)
-                    .addComponent(jScrollPane4))
-                .addGap(6, 6, 6)
+                    .addGroup(jPanel1Layout.createSequentialGroup()
+                        .addComponent(jPanel3, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                        .addGap(6, 6, 6))
+                    .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, jPanel1Layout.createSequentialGroup()
+                        .addComponent(c3dPanel, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)))
                 .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                     .addComponent(jLabel2)
                     .addComponent(jLabel1)
@@ -189,7 +244,9 @@ public class AreaTexto extends javax.swing.JPanel implements KeyListener, MouseL
                     .addComponent(jButton2, javax.swing.GroupLayout.PREFERRED_SIZE, 25, javax.swing.GroupLayout.PREFERRED_SIZE)
                     .addComponent(jButton5, javax.swing.GroupLayout.PREFERRED_SIZE, 25, javax.swing.GroupLayout.PREFERRED_SIZE)
                     .addComponent(jLabel5)
-                    .addComponent(sizeLabel))
+                    .addComponent(sizeLabel)
+                    .addComponent(c3dbutton, javax.swing.GroupLayout.PREFERRED_SIZE, 25, javax.swing.GroupLayout.PREFERRED_SIZE)
+                    .addComponent(cppButton))
                 .addGap(6, 6, 6))
         );
 
@@ -197,7 +254,7 @@ public class AreaTexto extends javax.swing.JPanel implements KeyListener, MouseL
         this.setLayout(layout);
         layout.setHorizontalGroup(
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addComponent(jPanel1, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+            .addComponent(jPanel1, javax.swing.GroupLayout.PREFERRED_SIZE, 844, Short.MAX_VALUE)
         );
         layout.setVerticalGroup(
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
@@ -214,8 +271,26 @@ public class AreaTexto extends javax.swing.JPanel implements KeyListener, MouseL
     }//GEN-LAST:event_jButton5ActionPerformed
 
     private void jButton2ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton2ActionPerformed
-        // TODO add your handling code here:
+        
     }//GEN-LAST:event_jButton2ActionPerformed
+
+    private void c3dbuttonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_c3dbuttonActionPerformed
+        if(c3dbutton.isSelected()){
+            c3dPanel.setVisible(true);
+            selectedC3D = true;
+        } else {
+            c3dPanel.setVisible(false);
+            selectedC3D = false;
+        }
+    }//GEN-LAST:event_c3dbuttonActionPerformed
+
+    private void cppButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_cppButtonActionPerformed
+        if(cppButton.isSelected()){
+            selectedCPP = true;
+        } else{
+            selectedCPP = false;
+        }
+    }//GEN-LAST:event_cppButtonActionPerformed
 
     public JEditorPane getjEditorPane1() {
         return interprete;
@@ -283,19 +358,31 @@ public class AreaTexto extends javax.swing.JPanel implements KeyListener, MouseL
     }
 
     public JTextPane getNavegador() {
-        return navegador;
+        return codigo3d;
     }
 
     public void setNavegador(JTextPane navegador) {
-        this.navegador = navegador;
+        this.codigo3d = navegador;
     }
 
     public JEditorPane getInterprete() {
         return interprete;
     }
 
+    public boolean isSelectedCPP() {
+        return selectedCPP;
+    }
+
+    public boolean isSelectedC3D() {
+        return selectedC3D;
+    }
+
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
+    private javax.swing.JPanel c3dPanel;
+    private javax.swing.JToggleButton c3dbutton;
+    private javax.swing.JTextPane codigo3d;
+    private javax.swing.JToggleButton cppButton;
     private javax.swing.JEditorPane interprete;
     private javax.swing.JButton jButton1;
     private javax.swing.JButton jButton2;
@@ -307,9 +394,9 @@ public class AreaTexto extends javax.swing.JPanel implements KeyListener, MouseL
     private javax.swing.JLabel jLabelColummna;
     private javax.swing.JLabel jLabelLinea;
     private javax.swing.JPanel jPanel1;
+    private javax.swing.JPanel jPanel3;
     private javax.swing.JScrollPane jScrollPane1;
     private javax.swing.JScrollPane jScrollPane4;
-    private javax.swing.JTextPane navegador;
     private javax.swing.JLabel sizeLabel;
     private TextLineNumber tln;
     private TextLineNumber tln2;

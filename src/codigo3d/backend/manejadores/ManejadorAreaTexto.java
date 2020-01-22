@@ -112,4 +112,11 @@ public class ManejadorAreaTexto {
         printTerminal(ERROR_MESSAGE + "Tipo de error: " + error);
     }
 
+    public boolean isSelectedCPP(){
+        return at.isSelectedCPP();
+    }
+    
+    public boolean isSelectedC3D(){
+        return at.isSelectedC3D();
+    }
 }

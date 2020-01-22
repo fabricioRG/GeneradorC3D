@@ -54,6 +54,7 @@ int t18$00t12;
 int t18$00t13;
 d1 = 0;
 d2 = 3;
+et36:
 cout << "opciones:"<< endl;
 cout << "1. suma"<< endl;
 cout << "2. potencia"<< endl;
@@ -63,10 +64,10 @@ cout << "5. ver matrix"<< endl;
 cout << "6. terminar"<< endl;
 cout << "Opcion?"<< endl;
 cin >>  op;
-et24:
-if (op == 1) goto et25;
-goto et26;
 et25:
+if (op == 1) goto et26;
+goto et27;
+et26:
 cout << "num1:"<< endl;
 cin >>  d1;
 cout << "num2:"<< endl;
@@ -80,17 +81,17 @@ t14 = t14$00res$2212;
 res = t14;
 cout << "resultado suma:"<< endl;
 cout << res<< endl;
-goto  et35;
-et26:
-if (op == 2) goto et27;
-goto et28;
+goto  et36;
 et27:
+if (op == 2) goto et28;
+goto et29;
+et28:
 cout << "base:"<< endl;
 cin >>  d1;
 cout << "potencia:"<< endl;
-cin >>  op;
+cin >>  int1;
 t15$00base$2824 = d1;
-t15$00potencia$2834 = op;
+t15$00potencia$2834 = int1;
 t15$00res$2912 = 1;
 t15$00i$309 = 0;
 t15$00i$309 = 0;
@@ -107,11 +108,11 @@ t15 = t15$00res$2912;
 res = t15;
 cout << "resultado potencia:"<< endl;
 cout << res<< endl;
-goto  et35;
-et28:
-if (op == 3) goto et29;
-goto et30;
+goto  et36;
 et29:
+if (op == 3) goto et30;
+goto et31;
+et30:
 cout << "numerador:"<< endl;
 cin >>  i1;
 cout << "divisor:"<< endl;
@@ -134,11 +135,11 @@ t16 = t16$00res$409;
 res = t16;
 cout << "resultado division:"<< endl;
 cout << res<< endl;
-goto  et35;
-et30:
-if (op == 4) goto et31;
-goto et32;
+goto  et36;
 et31:
+if (op == 4) goto et32;
+goto et33;
+et32:
 cout << "Llenando matrix:"<< endl;
 t17$00i$499 = 0;
 t17$00j$4915 = 0;
@@ -169,11 +170,11 @@ t17$00i$499 = t17$00t8;
 goto t17$00et8;
 t17$00et10:
 cout << "matrix llena"<< endl;
-goto  et35;
-et32:
-if (op == 5) goto et33;
-goto et34;
+goto  et36;
 et33:
+if (op == 5) goto et34;
+goto et35;
+et34:
 cout << "viendo matrix:"<< endl;
 t18$00i$659 = 0;
 t18$00j$6515 = 0;
@@ -206,10 +207,15 @@ goto t18$00et16;
 t18$00et18:
 cout << "fin impresion"<< endl;
 goto  et35;
-et34:
-cout << "SALIENDO"<< endl;
-goto  et35;
 et35:
+cout << "SALIENDO"<< endl;
+goto  et39;
+et39:
+if (op != 6) goto et37;
+goto et38;
+et37:
+goto et36;
+et38:
 cout << "SALIENDO"<< endl;
 
 return 0;
